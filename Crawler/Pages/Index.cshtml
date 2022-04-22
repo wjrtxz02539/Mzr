@@ -1,0 +1,81 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+<meta http-equiv="refresh" content="5">
+<div class="text-center">
+    <h1 class="display-4">Worker Status</h1>
+    <h2 class="display-6">Avaliable Proxy Count: @await Model.ProxyPool.GetProxyCount()</h2>
+    <table class="table mt-5">
+        <thead>
+        <tr>
+            <th scope="col">UID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Running</th>
+            <th scope="col">D Found</th>
+            <th scope="col">D Running</th>
+            <th scope="col">D Processed</th>
+            <th scope="col">R Found</th>
+            <th scope="col">R Running</th>
+            <th scope="col">R Processed</th>
+        </tr>
+    </thead>
+    @foreach (var worker in Model.Stats.Workers.Values)
+    {
+        <tr>
+            <td>@worker.Status.UserId</td>
+            <td>@worker.Status.Username</td>
+            <td>@worker.Running</td>
+            <td>@worker.Status.DynamicFound</td>
+            <td>@worker.Status.DynamicRunning</td>
+            <td>@worker.Status.DynamicProcessed</td>
+            <td>@worker.Status.ReplyFound</td>
+            <td>@worker.Status.ReplyRunning</td>
+            <td>@worker.Status.ReplyProcessed</td>
+        </tr>
+    }
+    </table>
+
+    <h3 class="display-6">Running Dynamic: @Model.RunningDynamic.Count</h3>
+    <table class="table mt-5">
+        <thead>
+        <tr>
+            <th scope="col">Dynamic Id</th>
+            <th scope="col">Time</th>
+            <th scope="col">Description</th>
+        </tr>
+    </thead>
+    @foreach (var pair in Model.RunningDynamic)
+    {
+        <tr>
+            <td>@pair.Value.DynamicId</td>
+            <td>@pair.Value.Time.ToLocalTime()</td>
+            <td>@pair.Value.Description</td>
+        </tr>
+    }
+    </table>
+
+    <h3 class="display-6">Failed Requests: @Model.RequestStatuses.Count</h3>
+    <table class="table mt-5">
+        <thead>
+        <tr>
+            <th scope="col">Time</th>
+            <th scope="col">Url</th>
+            <th scope="col">Count</th>
+            <th scope="col">Dead</th>
+            <th scope="col">Error Time</th>
+        </tr>
+    </thead>
+    @foreach (var status in Model.RequestStatuses)
+    {
+        <tr>
+            <td>@status.AddTime.ToLocalTime()</td>
+            <td>@status.Url</td>
+            <td>@status.FailedCount</td>
+            <td>@status.Dead</td>
+            <td>@status.LastTime.ToLocalTime()</td>
+        </tr>
+    }
+    </table>
+</div>

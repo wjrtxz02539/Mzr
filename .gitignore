@@ -1,0 +1,10 @@
+.vs
+.vscode
+appsettings.json
+appsettings.*.json
+bin
+obj
+Crawler/Properties
+Test/Properties
+.config
+*.csproj.user
