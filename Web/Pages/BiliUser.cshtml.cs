@@ -9,19 +9,13 @@ namespace Mzr.Web.Pages
 {
     public class BiliUserModel : PageModel
     {
-        public BiliUser User { get; set; } = null!;
-        private readonly IBiliUserRepository userRepo;
+        public long UserId { get; set; }
+        public bool ReplyCountEnabled { get; set; }
 
-        public BiliUserModel(IBiliUserRepository userRepo)
+        public IActionResult OnGet(long userId, bool replyCountEnabled = true)
         {
-            this.userRepo = userRepo;
-        }
-        public async Task<IActionResult> OnGet(long userId, string replySort = "-time", string dynamicSort = "-time")
-        {
-            User = await userRepo.Collection.Find(f => f.UserId == userId).FirstOrDefaultAsync();
-            if (User == null)
-                return NotFound();
-
+            UserId = userId;
+            ReplyCountEnabled = replyCountEnabled;
             return Page();
         }
     }

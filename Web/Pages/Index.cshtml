@@ -37,18 +37,18 @@
     </table>
     </div>
 
-    <form class="row py-3">
+    <form class="row py-3" target="_blank" action="/Search" method="get">
     <div class="col-2 p-0">
-        <select class="form-select" name="queryType">
-            <option selected value="userId">用户UID</option>
-            <option value="username">用户名</option>
-            <option value="replyContent">评论</option>
-            <option value="dynamicContent">动态</option>
+        <select class="form-select" name="QueryType">
+            <option value="userId">用户UID</option>
+            <option value="usernameQuery">用户名</option>
+            <option value="replyQuery">评论</option>
+            <option value="dynamicQuery">动态</option>
             <option value="dynamicId">动态ID</option>
         </select>
     </div>
     <div class="col-9 p-0">
-        <input type="text" class="form-control" name="queryInput"/>
+        <input type="text" class="form-control" name="QueryString"/>
     </div>
     <div class="col-1 p-0 btn-group">
         <button type="submit" class="btn btn-primary" stype="width: 100%">搜索</button>

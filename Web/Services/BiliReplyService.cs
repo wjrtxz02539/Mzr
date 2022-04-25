@@ -71,7 +71,8 @@ namespace Mzr.Web.Services
             return result;
         }
 
-        public async Task<PagingResponse<BiliReply>> Pagination(long? userId, long? threadId, long? upId, long? dialogId, int page = 1, int size = 0, string sort = "-time")
+        public async Task<PagingResponse<BiliReply>> Pagination(long? userId, long? threadId, long? upId, long? dialogId, int page = 1, int size = 0, 
+            string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null)
         {
             var filterBuilder = Builders<BiliReply>.Filter;
             FilterDefinition<BiliReply> filter;
@@ -84,23 +85,27 @@ namespace Mzr.Web.Services
             else if (dialogId.HasValue)
                 filter = filterBuilder.Eq(f => f.Dialog, dialogId);
             else
-                return new PagingResponse<BiliReply>();
+                filter = new BsonDocument();
 
-            SortDefinition<BiliReply> sortDefinition;
+            if (!string.IsNullOrEmpty(contentQuery))
+                filter &= filterBuilder.Regex(f => f.Content, new BsonRegularExpression($"/.*{contentQuery}.*/i "));
+
+            if (startTime.HasValue)
+                filter &= filterBuilder.Gte(f => f.Time, startTime.Value.ToUniversalTime());
+
+            if (endTime.HasValue)
+                filter &= filterBuilder.Lte(f => f.Time, endTime.Value.ToUniversalTime());
             var builder = Builders<BiliReply>.Sort;
-
-            switch (sort)
+            SortDefinition<BiliReply> sortDefinition = sort switch
             {
-                case "time":
-                    sortDefinition = builder.Ascending(f => f.Time);
-                    break;
-                case "-time":
-                    sortDefinition = builder.Descending(f => f.Time);
-                    break;
-                default:
-                    sortDefinition = builder.Descending(f => f.Time);
-                    break;
-            }
+                "time" => builder.Ascending(f => f.Time),
+                "-time" => builder.Descending(f => f.Time),
+                "user_id" => builder.Ascending(f => f.UserId),
+                "-user_id" => builder.Descending(f => f.UserId),
+                "like" => builder.Ascending(f => f.Like),
+                "-like" => builder.Descending(f => f.Like),
+                _ => new BsonDocument(),
+            };
             var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync();
             var totalCount = (int)await replyRepo.Collection.CountDocumentsAsync(filter);
             return new PagingResponse<BiliReply>(result, totalCount: totalCount, pageSize: size, currentPage: page);

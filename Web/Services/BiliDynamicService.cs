@@ -1,8 +1,8 @@
-﻿using MongoDB.Driver;
+﻿using MongoDB.Bson;
+using MongoDB.Driver;
 using Mzr.Share.Interfaces.Bilibili;
 using Mzr.Share.Models.Bilibili;
 using Mzr.Web.Models.Web;
-using System.Security.Cryptography.Xml;
 
 namespace Mzr.Web.Services
 {
@@ -12,28 +12,29 @@ namespace Mzr.Web.Services
         public BiliDynamicService(IBiliDynamicRepository dynamicRepo)
         {
             this.dynamicRepo = dynamicRepo;
-
         }
 
-        public async Task<PagingResponse<BiliDynamic>> Pagination(long userId, int page = 0, int size = 10, string sort = "-time")
+        public async Task<PagingResponse<BiliDynamic>> Pagination(long? userId = null, int page = 2, int size = 10, string sort = "-time",
+            string? descriptionQuery = null)
         {
-            SortDefinition<BiliDynamic> sortDefinition;
-            var builder = Builders<BiliDynamic>.Sort;
-
-            switch (sort)
+            var sortBuilder = Builders<BiliDynamic>.Sort;
+            SortDefinition<BiliDynamic> sortDefinition = sort switch
             {
-                case "time":
-                    sortDefinition = builder.Ascending(f => f.Time);
-                    break;
-                case "-time":
-                    sortDefinition = builder.Descending(f => f.Time);
-                    break;
-                default:
-                    sortDefinition = builder.Descending(f => f.Time);
-                    break;
-            }
-            var result = await dynamicRepo.Collection.Find(f => f.UserId == userId).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync();
-            var totalCount = (int)await dynamicRepo.Collection.CountDocumentsAsync(f => f.UserId == userId);
+                "time" => sortBuilder.Ascending(f => f.Time),
+                "-time" => sortBuilder.Descending(f => f.Time),
+                _ => new BsonDocument(),
+            };
+            var filterBuilder = Builders<BiliDynamic>.Filter;
+            FilterDefinition<BiliDynamic> filter = new BsonDocument();
+
+            if (userId.HasValue)
+                filter &= filterBuilder.Eq(f => f.UserId, userId);
+
+            if (!string.IsNullOrEmpty(descriptionQuery))
+                filter &= filterBuilder.Regex(f => f.Description, new BsonRegularExpression($"/.*{descriptionQuery}.*/i "));
+
+            var result = await dynamicRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync();
+            var totalCount = (int)await dynamicRepo.Collection.CountDocumentsAsync(filter);
             return new() { Items=result, MetaData = new() { CurrentPage=page, PageSize=size, TotalCount=totalCount} };
         }
     }

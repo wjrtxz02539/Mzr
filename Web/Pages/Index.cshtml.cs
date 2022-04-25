@@ -11,6 +11,11 @@ namespace Mzr.Web.Pages
 {
     public class IndexModel : PageModel
     {
+        [BindProperty]
+        public string QueryType { get; set; } = string.Empty;
+        [BindProperty]
+        public string QueryString { get; set; } = string.Empty;
+
         private readonly ILogger<IndexModel> _logger;
 
         public readonly GlobalStats GlobalStats;
@@ -26,6 +31,4 @@ namespace Mzr.Web.Pages
             
         }
     }
-
-    
 }

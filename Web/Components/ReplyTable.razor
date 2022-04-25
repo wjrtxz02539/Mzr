@@ -1,50 +1,87 @@
-﻿<table class="table table-striped">
+﻿<style>
+    .sort-th {
+        cursor: pointer;
+    }
+
+    .fa {
+        float: right;
+    }
+</style>
+<table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th scope="col" class="col-2">用户</th>
-            <th scope="col" class="col-1">时间</th>
+            <th scope="col" class="col-2 sort-th" @onclick=@(() => SortTable("user_id"))>用户<i class="fa @SortIcon("user_id")"></i></th>
+            <th scope="col" class="col-1 sort-th" @onclick=@(() => SortTable("like"))>点赞<i class="fa @SortIcon("like")"></i></th>
+            <th scope="col" class="col-1 sort-th" @onclick=@(() => SortTable("time"))>时间 <i class="fa @SortIcon("time")"></i></th>
             <th scope="col" class="col">评论</th>
         </tr>
     </thead>
     <tbody>
-        @foreach  (var reply in Replies)
+        @foreach (var reply in Replies)
         {
-            <tr>
-                <td>
-                    <div class="row">
-                        <div class="col-4" style="min-width: 3rem; min-height: 3rem">
-                            <img src=@reply.User.Avatar class="rounded" style="width: 3rem; height: 3rem" alt="Avatar" />
-                        </div>
-                        <div class="col" style="min-width: auto; min-height: auto">
-                            <div class="row">
+                <tr>
+                    <td>
+                        <div class="row">
+                            <div class="col-4" style="min-width: 3rem; min-height: 3rem">
+                                <img src=@reply.User.Avatar class="rounded" style="width: 3rem; height: 3rem" alt="Avatar" />
+                            </div>
+                            <div class="col" style="min-width: auto; min-height: auto">
                                 <a href="/BiliUser/?userId=@reply.UserId" target="_blank" class="text-decoration-none">
-                                    @reply.User.Username
+                                @reply.User.Username
                                 </a>
                             </div>
-                            <div class="row">
-                                <div class="col">❤ @reply.Like</div>
-                                @if  (reply.Dialog.HasValue && reply.Dialog > 0)
-                                {
-                                    <div class="col">
-                                        <a href="/BiliReplyDialog/?dialogId=@reply.Dialog" target="_blank" class="text-decoration-none">
-                                            对话
-                                        </a>
-                                    </div>
-                                }
-                            </div>
                         </div>
-                    </div>
-                </td>
-                <td>@reply.Time.ToLocalTime()</td>
-                <td>@reply.Content</td>
-            </tr>
+                    </td>
+                    <td>
+                        <div class="col">❤ @reply.Like</div>
+                    @if (reply.Dialog.HasValue && reply.Dialog > 0)
+                    {
+                                <div class="col">
+                                    <a href="/BiliReplyDialog/?dialogId=@reply.Dialog" target="_blank" class="text-decoration-none">
+                                        对话
+                                    </a>
+                                </div>
+                    }
+                    </td>
+                    <td>@reply.Time.ToLocalTime()</td>
+                    <td>@reply.Content</td>
+                </tr>
         }
     </tbody>
 </table>
 
-@using Mzr.Share.Models.Bilibili
 @code {
     [Parameter]
     public List<BiliReply> Replies { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<string> SortCallback { get; set; }
+
+    [Parameter]
+    public SortMetaData SortMetaData { get; set; } = null!;
+
+    private SortMetaData sortMetaData = null!;
+
+    protected override void OnInitialized()
+    {
+        sortMetaData = SortMetaData;
+    }
+
+    private string SortIcon(string field)
+    {
+        if (!field.Equals(sortMetaData.Field))
+            return "fa-solid fa-sort";
+        return sortMetaData.GetIconClass();
+    }
+    private async Task SortTable(string field)
+    {
+        if (!field.Equals(sortMetaData.Field))
+        {
+            sortMetaData = new(field);
+        }
+        sortMetaData.Next();
+
+        await SortCallback.InvokeAsync(sortMetaData.SortValue);
+    }
 
 }

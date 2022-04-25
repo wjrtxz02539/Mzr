@@ -1,13 +1,37 @@
-﻿<nav>
-    <ul class="pagination justify-content-center">
-        @foreach (var link in links)
-        {
-            <li @onclick="() => OnSelectedPage(link)" style="cursor: pointer;" class="page-item @(link.Enabled ? null : "disabled") @(link.Active ? "active" : null)">
-                <span class="page-link" href="#">@link.Text</span>
-            </li>
-        }
-    </ul>
-</nav>
+﻿<div class="row">
+    <div class="col">
+        <ul class="pagination justify-content-center">
+            @foreach (var link in links)
+            {
+                <li @onclick="() => OnSelectedPage(link)" style="cursor: pointer;" class="page-item @(link.Enabled ? null : "disabled") @(link.Active ? "active" : null)">
+                    <span class="page-link" href="#">@link.Text</span>
+                </li>
+            }
+        </ul>
+    </div>
+    <div class="col"><p class="text-start pt-1">共 @MetaData.TotalPages 页（ @MetaData.TotalCount 条）</p></div>
+    <div class="col">
+        <div class="row">
+            <div class="col"><p class="text-end pt-1">分页大小</p></div>
+            <div class="col">
+                <select @onchange="OnChangePageSize" class="form-select" title="分页大小">
+                    @for (int i = 10; i <= 100; i += 10)
+                    {
+                        @if (MetaData.PageSize == i)
+                        {
+                            <option selected value=@i>@i</option>
+                        }
+                        else
+                        {
+                            <option value=@i>@i</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 @using Mzr.Web.Models.Web;
 @code {
@@ -18,17 +42,20 @@
     public int Spread { get; set; } = 3;
 
     [Parameter]
-    public EventCallback<int> Callback { get;set; }
+    public EventCallback<int> OnSelectedPageCallback { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnChangePageSizeCallback { get; set; }
 
     private List<PagingLink> links = new();
 
     protected override void OnParametersSet()
     {
         links = new();
-        links.Add(new PagingLink("First",1, true));
+        links.Add(new PagingLink("First", 1, MetaData.TotalPages > 1 && MetaData.CurrentPage > 1));
         links.Add(new PagingLink("Prev", MetaData.CurrentPage - 1, MetaData.HasPrevious));
 
-        for (int i = 1; i < MetaData.TotalPages; i++)
+        for (int i = 1; i <= MetaData.TotalPages; i++)
         {
             if (i == MetaData.CurrentPage)
                 links.Add(new PagingLink(i.ToString(), i, true, true));
@@ -36,7 +63,7 @@
                 links.Add(new PagingLink(i.ToString(), i, true, false));
         }
         links.Add(new PagingLink("Next", MetaData.CurrentPage + 1, MetaData.HasNext));
-        links.Add(new PagingLink("End", MetaData.TotalPages, true));
+        links.Add(new PagingLink("End", MetaData.TotalPages, MetaData.TotalPages > 1 && MetaData.TotalPages > MetaData.CurrentPage));
     }
 
     private async Task OnSelectedPage(PagingLink link)
@@ -45,6 +72,13 @@
             return;
 
         MetaData.CurrentPage = link.Page;
-        await Callback.InvokeAsync(link.Page);
+        await OnSelectedPageCallback.InvokeAsync(link.Page);
+    }
+
+    private async Task OnChangePageSize(ChangeEventArgs e)
+    {
+        var size = Convert.ToInt32(e.Value);
+        MetaData.PageSize = size;
+        await OnChangePageSizeCallback.InvokeAsync(size);
     }
 }

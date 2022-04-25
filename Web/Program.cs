@@ -43,6 +43,7 @@ builder.Services.AddSingleton<IBiliUserRepository, BiliUserRepository>()
                 .AddSingleton<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
                 .AddSingleton<GlobalStats>()
                 .AddSingleton<BiliReplyService>()
+                .AddSingleton<BiliUserService>()
                 .AddSingleton<BiliDynamicService>();
 
 builder.Services.AddHostedService<MonitorUpdateWorker>();
