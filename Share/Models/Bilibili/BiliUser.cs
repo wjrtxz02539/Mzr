@@ -18,7 +18,7 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("user_id")]
         public long UserId { get; set; }
         [BsonElement("username")]
-        public string? UserName { get; set; }
+        public string Username { get; set; } = null!;
         [BsonElement("avatar")]
         public string? Avatar { get; set; }
         [BsonElement("sex")]
@@ -30,8 +30,51 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("vip")]
         public int? Vip { get; set; }
         [BsonElement("sailings")]
-        public List<BiliUserSailing>? Sailings { get; set; }
+        public List<BiliUserSailing> Sailings { get; set; } = new();
         [BsonElement("pendants")]
-        public List<string>? Pendants { get; set; }
+        public List<string> Pendants { get; set; } = new();
+
+        [BsonElement("update_time")]
+        public DateTime UpdateTime { get; set; } = DateTime.MinValue;
+
+        [BsonElement("usernames")]
+        public List<string> Usernames { get; set; } = new();
+
+        [BsonElement("signs")]
+        public List<string> Signs { get; set; } = new();
+
+        [BsonIgnore]
+        public string SexString
+        {
+            get
+            {
+                switch (Sex)
+                {
+                    case 0:
+                        return "女";
+                    case 1:
+                        return "男";
+                    default:
+                        return "未知";
+                }
+            }
+        }
+
+        [BsonIgnore]
+        public string VipString
+        {
+            get
+            {
+                switch (Vip)
+                {
+                    case 1:
+                        return "大会员";
+                    case 2:
+                        return "年度大会员";
+                    default:
+                        return "";
+                }
+            }
+        }
     }
 }

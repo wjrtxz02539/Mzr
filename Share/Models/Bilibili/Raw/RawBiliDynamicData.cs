@@ -67,7 +67,7 @@ namespace Mzr.Share.Models.Bilibili.Raw
         public long DynamicId { get { return Convert.ToInt64(DynamicIdStr); } }
 
         [JsonIgnore]
-        public DateTime Date { get { return DateTimeOffset.FromUnixTimeSeconds(Timestamp).DateTime; } }
+        public DateTime Date { get { return DateTimeOffset.FromUnixTimeSeconds(Timestamp).UtcDateTime; } }
 
         [JsonIgnore]
         public long OriginalById { get { return Convert.ToInt64(OriginalByIdStr); } }

@@ -37,7 +37,7 @@ namespace Mzr.Share.Repositories.Bilibili
                         Database.CreateCollection(CollectionName);
 
                     _collection = Database?.GetCollection<T>(CollectionName);
-                    if (_indexModels.Count() > 0)
+                    if (_indexModels.Count > 0)
                         _collection?.Indexes.CreateMany(_indexModels);
                 }
 
@@ -47,20 +47,12 @@ namespace Mzr.Share.Repositories.Bilibili
             }
         }
 
-        public BiliRepository(IHost host, ILogger logger, string collectionName, List<CreateIndexModel<T>>? createIndexModels = null)
+        public BiliRepository(IMongoDatabase mongoDatabase, ILogger logger, string collectionName, List<CreateIndexModel<T>>? createIndexModels = null)
         {
             CollectionName = collectionName;
 
-            var configuration = host.Services.GetRequiredService<Configuration.Configuration>();
             Logger = logger;
-
-            if (Database is null)
-            {
-                Database = new MongoClient(configuration.Database.Url).GetDatabase(configuration.Database.DatabaseName);
-            }
-
-            if (Database == null)
-                throw new Exception($"Database {Database?.DatabaseNamespace} not found.");
+            Database = mongoDatabase;
 
             if (createIndexModels == null)
                 createIndexModels = new List<CreateIndexModel<T>>();
@@ -87,16 +79,6 @@ namespace Mzr.Share.Repositories.Bilibili
 
         public async Task<T> GetAsync(string id) =>
             await GetAsync(ObjectId.Parse(id));
-
-        public async Task<List<T>> PaginationAsync(FilterDefinition<T> filter, int page, int pageSize) =>
-             await Collection.Find(filter).Skip(page * pageSize).Limit(pageSize).ToListAsync();
-
-
-        public async Task<long> CountAsync(FilterDefinition<T> filter) =>
-            await Collection.CountDocumentsAsync(filter);
-
-        public async Task<IAsyncCursor<T>> FindAsync(FilterDefinition<T> filter, FindOptions<T>? options = null) =>
-            await Collection.FindAsync(filter, options);
 
         public void Dispose()
         {

@@ -56,7 +56,7 @@ namespace Mzr.Share.Models.Bilibili.Raw
         public List<RawBiliReply> Replies { get; set; } = new List<RawBiliReply>();
 
         [JsonIgnore]
-        public DateTime Time { get { return DateTimeOffset.FromUnixTimeSeconds(Timestamp).DateTime; } }
+        public DateTime Time { get { return DateTimeOffset.FromUnixTimeSeconds(Timestamp).UtcDateTime; } }
 
 
     }

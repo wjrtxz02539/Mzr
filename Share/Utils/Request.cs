@@ -46,7 +46,7 @@ namespace Mzr.Share.Utils
             string error = string.Empty;
             do
             {
-                if (count > 10)
+                if (count > 100)
                     logLevel = LogLevel.Warning;
 
                 Proxy? proxy = null;
@@ -169,7 +169,7 @@ namespace Mzr.Share.Utils
             var logLevel = LogLevel.Debug;
             do
             {
-                if (count > 10)
+                if (count > 100)
                     logLevel = LogLevel.Warning;
                 try
                 {

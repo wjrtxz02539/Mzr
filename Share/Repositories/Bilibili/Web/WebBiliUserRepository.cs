@@ -32,13 +32,21 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             rawBiliUserRepository = host.Services.GetRequiredService<IRawBiliUserRepository>();
             biliUserRepository = host.Services.GetRequiredService<IBiliUserRepository>();
         }
-        public async Task<BiliUser?> FromIdAsync(long id)
+        public async Task<BiliUser?> FromIdAsync(long id, int retryCount = 100)
         {
-            var response = await request.GetFromJsonAsync<RawBiliUser>(string.Format(accountUrl, id), autoHttps: true);
-            if (response == null)
-                return null;
+            RawBiliUser? rawBiliUser;
+            var count = 0;
+            do
+            {
+                rawBiliUser = await request.GetFromJsonAsync<RawBiliUser>(string.Format(accountUrl, id), autoHttps: true);
 
-            var user = await rawBiliUserRepository.GetBiliUserAsync(response);
+                if (rawBiliUser == null || count >= retryCount)
+                    return null;
+
+                count++;
+            } while (rawBiliUser.Code != 0);
+
+            var user = await rawBiliUserRepository.GetBiliUserAsync(rawBiliUser);
             if (user == null)
                 return null;
 

@@ -1,0 +1,47 @@
+﻿@page "/reply-pagination"
+
+<div class="row">
+    <DynamicTable Dynamics="response.Items" />
+</div>
+
+<div class="row">
+    <div class="col">
+        <Pagination MetaData="response.MetaData" Spread="3" Callback="SelectedPage" />
+    </div>
+</div>
+
+@using Mzr.Share.Models.Bilibili
+@using Mzr.Web.Models.Web
+@using Mzr.Web.Services
+@code {
+    public PagingResponse<BiliDynamic> response { get; set; } = new();
+
+    [Parameter]
+    public int Page { get; set; } = 1;
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+    [Parameter]
+    public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public long UserId { get; set; }
+
+    [Inject]
+    private BiliDynamicService dynamicService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Request();
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        Page = page;
+        await Request();
+    }
+
+    private async Task Request()
+    {
+        response = await dynamicService.Pagination(userId: UserId, page: Page, size: PageSize, sort: Sort);
+    }
+}

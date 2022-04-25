@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using MongoDB.Bson;
@@ -26,11 +27,5 @@ namespace Mzr.Share.Interfaces.Bilibili
         Task<T> GetAsync(ObjectId id);
 
         Task<T> GetAsync(string id);
-
-        Task<List<T>> PaginationAsync(FilterDefinition<T> filter, int page, int pageSize);
-
-        Task<long> CountAsync(FilterDefinition<T> filter);
-
-        Task<IAsyncCursor<T>> FindAsync(FilterDefinition<T> filter, FindOptions<T>? options = null);
     }
 }

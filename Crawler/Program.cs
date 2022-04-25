@@ -12,6 +12,7 @@ using Mzr.Service.Crawler.Utils;
 using Mzr.Share.Interfaces;
 using Microsoft.AspNetCore.Builder;
 using System.Net;
+using MongoDB.Driver;
 
 ServicePointManager.ReusePort = true;
 
@@ -28,12 +29,18 @@ builder.Logging.AddSimpleConsole(options =>
     options.TimestampFormat = "[yyyy-MM-dd HH:mm:ss]";
 });
 
-builder.Services.AddTransient<MzrConfiguration>()
-                .AddTransient<CrawlerConfiguration>()
-                .AddTransient<IBiliUserRepository, BiliUserRepository>()
-                .AddTransient<IBiliDynamicRepository, BiliDynamicRepository>()
-                .AddTransient<IBiliReplyRepository, BiliReplyRepository>()
-                .AddTransient<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
+builder.Services.AddSingleton<MzrConfiguration>()
+                .AddSingleton<CrawlerConfiguration>()
+                .AddSingleton((provider) =>
+                {
+                    var config = provider.GetRequiredService<MzrConfiguration>();
+                    var client = new MongoClient(config.Database.Url);
+                    return client.GetDatabase(config.Database.DatabaseName);
+                })
+                .AddSingleton<IBiliUserRepository, BiliUserRepository>()
+                .AddSingleton<IBiliDynamicRepository, BiliDynamicRepository>()
+                .AddSingleton<IBiliReplyRepository, BiliReplyRepository>()
+                .AddSingleton<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
                 .AddTransient<IRawBiliDynamicRepository, RawBiliDynamicRepository>()
                 .AddTransient<IRawBiliUserRepository, RawBiliUserRepository>()
                 .AddSingleton<IProxyPool, SelfProxyPool>()

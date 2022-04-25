@@ -1,0 +1,39 @@
+﻿
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">数据</th>
+            <th scope="col">时间</th>
+            <th scope="col">内容</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var dynamic in Dynamics)
+        {
+            <tr>
+                <td class="col-2">
+                    <div class="row">
+                        ❤ @dynamic.Like
+                    </div>
+                    <div class="row">
+                        👁 @dynamic.View
+                    </div>
+                </td>
+                <td>@dynamic.Time.ToLocalTime()</td>
+                <td>
+                    <a href="/BiliDynamic/?dynamicId=@dynamic.DynamicId" target="_blank" class="text-decoration-none">
+                        @dynamic.Description
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@using Mzr.Share.Models.Bilibili
+@code {
+    [Parameter]
+    public List<BiliDynamic> Dynamics { get; set; } = new();
+
+}

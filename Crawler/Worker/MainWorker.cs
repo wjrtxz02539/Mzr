@@ -43,8 +43,6 @@ namespace Mzr.Service.Crawler.Worker
 
         private async Task MonitorTask(CancellationToken stoppingToken)
         {
-            
-
             foreach (var task in tasks)
                 task.Start();
 

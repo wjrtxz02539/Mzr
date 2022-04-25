@@ -45,6 +45,8 @@ namespace Mzr.Service.Crawler.Utils
         public int RequestTimeout { get; set; } = 10;
         public int RestartMinutes { get; set; } = 5;
 
+        public bool Repeat { get; set; } = true;
+
         public void Validate()
         {
             if (UserId <= 0 

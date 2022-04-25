@@ -9,6 +9,7 @@ using Mzr.Share.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.SymbolStore;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
@@ -59,16 +60,24 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             webUserRepo = host.Services.GetRequiredService<WebBiliUserRepository>();
         }
 
-        public async IAsyncEnumerable<RawBiliReply> FromDynamicAsync(BiliDynamic biliDynamic, [EnumeratorCancellation] CancellationToken stoppingToken, int nextPos = 0, bool force = false, int requestTimeout = 10)
+        public async IAsyncEnumerable<RawBiliReply> FromDynamicAsync(BiliDynamic biliDynamic, [EnumeratorCancellation] CancellationToken stoppingToken, int nextPos = 0, bool force = false, int requestTimeout = 10, int retryCount = 100)
         {
-            var up = await userRepo.Collection.Find(f => f.UserId == biliDynamic.UserId).Limit(1).FirstOrDefaultAsync(stoppingToken) ?? await webUserRepo.FromIdAsync(biliDynamic.UserId);
+            var up = await userRepo.Collection.Find(f => f.UserId == biliDynamic.UserId).Limit(1).FirstOrDefaultAsync(stoppingToken);
             if (up is null)
             {
-                logger.LogError("{logPrefix} User {userId} not found.", logPrefix, biliDynamic.UserId);
-                yield break;
+                up = await webUserRepo.FromIdAsync(biliDynamic.UserId);
+                if (up != null)
+                {
+                    await userRepo.InsertAsync(up);
+                }
+                else
+                {
+                    logger.LogError("{logPrefix} User {userId} not found.", logPrefix, biliDynamic.UserId);
+                    yield break;
+                }
             }
 
-            logPrefix = $"[{up.UserName}:{biliDynamic.DynamicId}]";
+            logPrefix = $"[{up.Username}:{biliDynamic.DynamicId}]";
             var runRecordCursor = runRecordRepo.Collection.Find(x => x.DynamicId == biliDynamic.DynamicId).SortByDescending(x => x.Id).Limit(1).ToList();
             BiliDynamicRunRecord? lastRunRecord;
             if (runRecordCursor.Count > 0)
@@ -87,15 +96,22 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             try
             {
                 logger.LogDebug("{logPrefix} Start fetching.", logPrefix);
-                var response = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers: headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
-                if (response is null)
-                {
-                    logger.LogError("{logPrefix} Failed to get url: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
-                    yield break;
-                }
-                logger.LogDebug("{logPrefix} Fetching successful.", logPrefix);
 
-                cursor = response.Data.Cursor;
+                RawBiliThread? rawBiliThread;
+                var rawBiliThreadCount = 0;
+                do
+                {
+                    rawBiliThread = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers: headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
+                    if (rawBiliThread is null || rawBiliThreadCount >= retryCount)
+                    {
+                        logger.LogError("{logPrefix} Failed to get url: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
+                        yield break;
+                    }
+                    rawBiliThreadCount++;
+                } while (rawBiliThread.Code != 0);
+
+                logger.LogDebug("{logPrefix} Fetching successful.", logPrefix);
+                cursor = rawBiliThread.Data.Cursor;
             }
             catch (Exception e)
             {
@@ -141,22 +157,27 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 runRecord.Progress = nextPos;
                 query["next"] = nextPos.ToString();
                 uriBuilder.Query = query.ToString();
-                RawBiliThread? response;
+                RawBiliThread? rawBiliThread;
+                var rawBiliThreadCount = 0;
                 try
                 {
-                    response = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers: headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
-                    logger.LogDebug("{logPrefix} Queryed next {next} with {replyCount} replies.", logPrefix, nextPos, response?.Data.Replies.Count);
-                    if (response is null)
+                    do
                     {
-                        logger.LogError("{logPrefix} Failed to get url: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
-                        yield break;
-                    }
+                        rawBiliThread = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers: headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
+                        logger.LogDebug("{logPrefix} Queryed next {next} with {replyCount} replies.", logPrefix, nextPos, rawBiliThread?.Data.Replies.Count);
+                        if (rawBiliThread is null || rawBiliThreadCount >= retryCount)
+                        {
+                            logger.LogError("{logPrefix} Failed to get url: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
+                            yield break;
+                        }
+                        rawBiliThreadCount++;
+                    } while (rawBiliThread.Code != 0);
 
-                    cursor = response.Data.Cursor;
+                    cursor = rawBiliThread.Data.Cursor;
 
-                    if (response.Code != 0)
+                    if (rawBiliThread.Code != 0)
                     {
-                        logger.LogError("{logPrefix} API return failed with code {code}: {url}", logPrefix, response.Code, uriBuilder.Uri.AbsoluteUri);
+                        logger.LogError("{logPrefix} API return failed with code {code}: {url}", logPrefix, rawBiliThread.Code, uriBuilder.Uri.AbsoluteUri);
                         yield break;
                     }
                     nextPos = cursor.Next;
@@ -166,9 +187,9 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     logger.LogError("{logPrefix} Failed to parse url result: {url}\n{ex}", logPrefix, uriBuilder.Uri.AbsoluteUri, e);
                     yield break;
                 }
-                if (response.Data.Replies.Count > 0)
+                if (rawBiliThread.Data.Replies.Count > 0)
                 {
-                    foreach (var reply in response.Data.Replies)
+                    foreach (var reply in rawBiliThread.Data.Replies)
                         yield return reply;
                 }
             }
@@ -204,7 +225,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             document.User = new BiliReplyUser()
             {
                 UserId = raw.Member.UserId,
-                UserName = raw.Member.Username,
+                Username = raw.Member.Username,
                 Avatar = raw.Member.Avatar,
                 Sex = raw.Member.ParsedSex,
                 Sign = raw.Member.Sign,
@@ -228,10 +249,66 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             if (!string.IsNullOrEmpty(raw.Member.Pendant.Name))
                 document.User.Pendants.Add(raw.Member.Pendant.Name);
 
+            // Update BiliUser to Database
+            var dbUser = await userRepo.Collection.Find(f => f.UserId == document.User.UserId).FirstOrDefaultAsync();
+            if (dbUser == null)
+            {
+                dbUser = await webUserRepo.FromIdAsync(document.User.UserId);
+                if(dbUser == null)
+                { 
+                    dbUser = new BiliUser()
+                    {
+                        UserId = document.User.UserId,
+                        Username = document.User.Username,
+                        Avatar = document.User.Avatar,
+                        Sex = document.User.Sex,
+                        Sign = document.User.Sign,
+                        Level = document.User.Level,
+                        Vip = document.User.Vip,
+                        Sailings = document.User.Sailings,
+                        Pendants = document.User.Pendants,
+                        UpdateTime = DateTime.UtcNow
+                    };
+                }
+                try
+                {
+                    await userRepo.InsertAsync(dbUser);
+                }
+                catch (MongoWriteException ex)
+                {
+                    if (ex.WriteError.Code == 11000)
+                        await userRepo.UpdateAsync(dbUser);
+                    else
+                        logger.LogError("Insert Bili User error: {ex}.", ex.WriteError.ToString());
+                }
+            }
+            else
+            {
+                dbUser = MergeUserSailingAndPendent(dbUser, document.User);
+
+                if (dbUser.UpdateTime < DateTime.UtcNow)
+                {
+                    dbUser.Username = document.User.Username;
+                    dbUser.Avatar = document.User.Avatar;
+                    dbUser.Sex = document.User.Sex;
+                    dbUser.Sign = document.User.Sign;
+                    dbUser.Level = document.User.Level;
+                    dbUser.Vip = document.User.Vip;
+                    dbUser.UpdateTime = DateTime.UtcNow;
+                }
+
+                if (!dbUser.Usernames.Contains(document.User.Username))
+                    dbUser.Usernames.Add(document.User.Username);
+                if(!dbUser.Signs.Contains(document.User.Sign))
+                    dbUser.Signs.Add(document.User.Sign);
+
+                await userRepo.UpdateAsync(dbUser);
+            }
+
             document.Up = new BiliReplyMiniUser()
             {
                 UserId = up.UserId,
-                UserName = up.UserName
+                Username = up.Username
             };
 
             if (raw.ReplyCount > 0)
@@ -255,6 +332,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 biliReply.Like = document.Like;
                 biliReply.RepliesCount = document.RepliesCount;
                 biliReply.Plat = document.Plat;
+                biliReply.Time = document.Time;
                 await replyRepo.UpdateAsync(biliReply);
                 logger.LogTrace("{logPrefix} Update reply {replyId}.", logPrefix, document.ReplyId);
                 return biliReply;
@@ -267,7 +345,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             }
         }
 
-        private async Task FromReplyIdAsync(long replyId, BiliUser up, BiliDynamic dynamic, int page, int requestTimeout = 10)
+        private async Task FromReplyIdAsync(long replyId, BiliUser up, BiliDynamic dynamic, int page, int requestTimeout = 10, int retryCount = 100)
         {
             var query = HttpUtility.ParseQueryString(replyBaseQuery);
             query["pn"] = page.ToString();
@@ -278,19 +356,21 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             var uriBuilder = new UriBuilder(replyUri);
             uriBuilder.Query = query.ToString();
 
-            var response = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
-            if (response == null)
-                return;
-
-            if (response.Code != 0)
+            RawBiliThread? rawBiliThread;
+            var rawBiliThreadCount = 0;
+            do
             {
-                logger.LogError("{logPrefix} Failed to walk sub replies: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
-                return;
-            }
+                rawBiliThread = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
+                if (rawBiliThread == null || rawBiliThreadCount >= retryCount)
+                {
+                    logger.LogError("{logPrefix} Failed to walk sub replies: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
+                    return;
+                }
+            } while (rawBiliThread.Code != 0);
 
-            if (response.Data.Replies != null && response.Data.Replies.Count > 0)
+            if (rawBiliThread.Data.Replies != null && rawBiliThread.Data.Replies.Count > 0)
             {
-                foreach(var reply in response.Data.Replies)
+                foreach(var reply in rawBiliThread.Data.Replies)
                     await FromRawAsync(reply, up, dynamic, requestTimeout: requestTimeout);
             }
 
@@ -305,6 +385,26 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             var buf = new byte[memoryStream.Length];
             memoryStream.Read(buf, 0, buf.Length);
             return Encoding.UTF8.GetString(buf[40..^1]);
+        }
+
+        private BiliUser MergeUserSailingAndPendent(BiliUser user, BiliReplyUser replyUser)
+        {
+            var dbSailingNames = user.Sailings.Select(s => s.Name).ToList();
+            if (replyUser.Sailings != null)
+                foreach (var item in replyUser.Sailings)
+                {
+                    if (!dbSailingNames.Contains(item.Name))
+                        user.Sailings.Add(item);
+                }
+
+            if(replyUser.Pendants != null)
+                foreach (var item in replyUser.Pendants)
+                {
+                    if (!user.Pendants.Contains(item))
+                        user.Pendants.Add(item);
+                }
+
+            return user;
         }
 
     }

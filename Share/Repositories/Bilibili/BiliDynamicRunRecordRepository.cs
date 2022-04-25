@@ -13,8 +13,8 @@ namespace Mzr.Share.Repositories.Bilibili
 {
     public class BiliDynamicRunRecordRepository : BiliRepository<BiliDynamicRunRecord>, IBiliDynamicRunRecordRepository
     {
-        public BiliDynamicRunRecordRepository(IHost host, ILogger<BiliDynamicRunRecordRepository> logger) : base(
-            host,
+        public BiliDynamicRunRecordRepository(IMongoDatabase mongoDatabase, ILogger<BiliDynamicRunRecordRepository> logger) : base(
+            mongoDatabase,
             logger,
             "bili_dynamic_run_record",
             new List<CreateIndexModel<BiliDynamicRunRecord>>()

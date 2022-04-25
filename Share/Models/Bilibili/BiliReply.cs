@@ -7,7 +7,7 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("user_id")]
         public long UserId { get; set; }
         [BsonElement("username")]
-        public string? UserName { get; set; }
+        public string? Username { get; set; }
         [BsonElement("avatar")]
         public string? Avatar { get; set; }
         [BsonElement("sex")]
@@ -29,7 +29,7 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("user_id")]
         public long UserId { get; set; }
         [BsonElement("username")]
-        public string? UserName { get; set; }
+        public string? Username { get; set; }
     }
     public class BiliReply : BiliBase
     {
@@ -54,7 +54,7 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("user_id")]
         public long UserId { get; set; }
         [BsonElement("user")]
-        public BiliReplyUser? User { get; set; }
+        public BiliReplyUser User { get; set; } = null!;
         [BsonElement("up")]
         public BiliReplyMiniUser? Up { get; set; }
         [BsonElement("content")]

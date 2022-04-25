@@ -1,0 +1,50 @@
+﻿<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col" class="col-2">用户</th>
+            <th scope="col" class="col-1">时间</th>
+            <th scope="col" class="col">评论</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach  (var reply in Replies)
+        {
+            <tr>
+                <td>
+                    <div class="row">
+                        <div class="col-4" style="min-width: 3rem; min-height: 3rem">
+                            <img src=@reply.User.Avatar class="rounded" style="width: 3rem; height: 3rem" alt="Avatar" />
+                        </div>
+                        <div class="col" style="min-width: auto; min-height: auto">
+                            <div class="row">
+                                <a href="/BiliUser/?userId=@reply.UserId" target="_blank" class="text-decoration-none">
+                                    @reply.User.Username
+                                </a>
+                            </div>
+                            <div class="row">
+                                <div class="col">❤ @reply.Like</div>
+                                @if  (reply.Dialog.HasValue && reply.Dialog > 0)
+                                {
+                                    <div class="col">
+                                        <a href="/BiliReplyDialog/?dialogId=@reply.Dialog" target="_blank" class="text-decoration-none">
+                                            对话
+                                        </a>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td>@reply.Time.ToLocalTime()</td>
+                <td>@reply.Content</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@using Mzr.Share.Models.Bilibili
+@code {
+    [Parameter]
+    public List<BiliReply> Replies { get; set; } = new();
+
+}

@@ -30,16 +30,23 @@ namespace Mzr.Share.Repositories.Bilibili.Web
         }
 
         public async IAsyncEnumerable<BiliDynamic> FromUserIdAsync(long userId, long offsetDynamicId = 0, int skip = 0,
-            int? maxDepth = null, int? maxDays = null, bool force = false, int requestTimeout = 10)
+            int? maxDepth = null, int? maxDays = null, bool force = false, int requestTimeout = 10, int retryCount = 100)
         {
             var logPrefix = $"[Space][{userId}]";
             var url = string.Format(@"{0}?host_uid={1}&offset_dynamic_id={2}&need_top=1&platform=web", spaceUri.AbsoluteUri, userId, offsetDynamicId);
-            var rawSpace = await request.GetFromJsonAsync<RawBiliSpace>(url, timeout: requestTimeout, autoHttps: true, headers: headers);
-            if (rawSpace == null)
+
+            RawBiliSpace? rawSpace;
+            var spaceCount = 0;
+            do
             {
-                logger.LogError("{logPrefix} Failed to get url {url}.", url);
-                yield break;
-            }
+                rawSpace = await request.GetFromJsonAsync<RawBiliSpace>(url, timeout: requestTimeout, autoHttps: true, headers: headers);
+                if (rawSpace == null || spaceCount >= retryCount)
+                {
+                    logger.LogError("{logPrefix} Failed to get url {url}.", url);
+                    yield break;
+                }
+                spaceCount++;
+            } while (rawSpace.Code != 0);
 
             if (rawSpace == null || rawSpace.Data == null)
             {
@@ -81,7 +88,10 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                         if (maxDepth >= 0)
                             maxDepth--;
                         else
+                        {
                             logger.LogInformation("{logPrefix} Hit depth limit.", logPrefix);
+                            yield break;
+                        }
                     }
 
                     if (OldestTime.HasValue)

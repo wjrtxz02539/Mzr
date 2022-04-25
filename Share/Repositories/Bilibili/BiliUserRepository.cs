@@ -13,14 +13,14 @@ namespace Mzr.Share.Repositories.Bilibili
 {
     public class BiliUserRepository : BiliRepository<BiliUser>, IBiliUserRepository
     {
-        public BiliUserRepository(IHost host, ILogger<BiliUserRepository> logger) : base(
-            host,
+        public BiliUserRepository(IMongoDatabase mongoDatabase, ILogger<BiliUserRepository> logger) : base(
+            mongoDatabase,
             logger,
             "bili_user", 
             new List<CreateIndexModel<BiliUser>>()
         {
             new CreateIndexModel<BiliUser>(Builders<BiliUser>.IndexKeys.Ascending(f => f.UserId), new CreateIndexOptions() {Unique = true, Background = true}),
-            new CreateIndexModel<BiliUser>(Builders<BiliUser>.IndexKeys.Ascending(f => f.UserName), new CreateIndexOptions(){Background = true})
+            new CreateIndexModel<BiliUser>(Builders<BiliUser>.IndexKeys.Ascending(f => f.Username), new CreateIndexOptions(){Background = true})
         })
         {
         }

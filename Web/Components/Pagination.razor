@@ -1,0 +1,50 @@
+﻿<nav>
+    <ul class="pagination justify-content-center">
+        @foreach (var link in links)
+        {
+            <li @onclick="() => OnSelectedPage(link)" style="cursor: pointer;" class="page-item @(link.Enabled ? null : "disabled") @(link.Active ? "active" : null)">
+                <span class="page-link" href="#">@link.Text</span>
+            </li>
+        }
+    </ul>
+</nav>
+
+@using Mzr.Web.Models.Web;
+@code {
+    [Parameter]
+    public PagingMetaData MetaData { get; set; } = new();
+
+    [Parameter]
+    public int Spread { get; set; } = 3;
+
+    [Parameter]
+    public EventCallback<int> Callback { get;set; }
+
+    private List<PagingLink> links = new();
+
+    protected override void OnParametersSet()
+    {
+        links = new();
+        links.Add(new PagingLink("First",1, true));
+        links.Add(new PagingLink("Prev", MetaData.CurrentPage - 1, MetaData.HasPrevious));
+
+        for (int i = 1; i < MetaData.TotalPages; i++)
+        {
+            if (i == MetaData.CurrentPage)
+                links.Add(new PagingLink(i.ToString(), i, true, true));
+            else if (i >= MetaData.CurrentPage - Spread && i <= MetaData.CurrentPage + Spread)
+                links.Add(new PagingLink(i.ToString(), i, true, false));
+        }
+        links.Add(new PagingLink("Next", MetaData.CurrentPage + 1, MetaData.HasNext));
+        links.Add(new PagingLink("End", MetaData.TotalPages, true));
+    }
+
+    private async Task OnSelectedPage(PagingLink link)
+    {
+        if (link.Page == MetaData.CurrentPage || !link.Enabled)
+            return;
+
+        MetaData.CurrentPage = link.Page;
+        await Callback.InvokeAsync(link.Page);
+    }
+}

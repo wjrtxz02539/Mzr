@@ -52,9 +52,9 @@ namespace Mzr.Service.Crawler.Worker
                 logger.LogError("User not found. {userId}", configuration.UserId);
                 return;
             }
-            Status.Username = up.UserName ?? string.Empty;
+            Status.Username = up.Username ?? string.Empty;
 
-            var logPrefix = $"[{up.UserName}]";
+            var logPrefix = $"[{up.Username}]";
 
             var replyBlock = new ActionBlock<Func<Task<BiliReply>>>(
                 async func =>
@@ -129,6 +129,7 @@ namespace Mzr.Service.Crawler.Worker
                         {
                             db.Like = dynamic.Like;
                             db.View = dynamic.View;
+                            db.Time = dynamic.Time;
                             await dynamicRepo.UpdateAsync(db);
                             logger.LogDebug("{logPrefix} Update {dynamicId}.", logPrefix, dynamic.DynamicId);
                         }
@@ -160,8 +161,12 @@ namespace Mzr.Service.Crawler.Worker
 
             do
             {
-                if(!Running)
+                if (!Running)
+                {
                     dynamicBlock.Post(configuration.UserId);
+                    if (!configuration.Repeat)
+                        break;
+                }
 
                 await Task.Delay(TimeSpan.FromMinutes(configuration.RestartMinutes), cancellationToken: stoppingToken);
             } while (!stoppingToken.IsCancellationRequested);

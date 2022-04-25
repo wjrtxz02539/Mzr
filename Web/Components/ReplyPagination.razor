@@ -1,0 +1,68 @@
+﻿@page "/reply-pagination"
+
+<div class="row">
+    <ReplyTable Replies="response.Items" />
+</div>
+
+<div class="row">
+    <div class="col">
+        <Pagination MetaData="response.MetaData" Spread="3" Callback="SelectedPage" />
+    </div>
+    <div class="col">
+        <input @onchange="OnPageSizeChanged" value=@PageSize />
+    </div>
+</div>
+
+@using Mzr.Share.Models.Bilibili
+@using Mzr.Web.Models.Web
+@using Mzr.Web.Services
+@code {
+    public PagingResponse<BiliReply> response { get; set; } = new();
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "page")]
+    public int Page { get; set; } = 1;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "size")]
+    public int PageSize { get; set; } = 10;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "threadId")]
+    public long? ThreadId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "dialogId")]
+    public long? DialogId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "upId")]
+    public long? UpId { get; set; } = null;
+
+    [Inject]
+    private BiliReplyService replyService { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Request();
+    }
+
+    private async Task OnPageSizeChanged(ChangeEventArgs e)
+    {
+        PageSize = Convert.ToInt32(e.Value);
+        await Request();
+    }
+
+    private async Task SelectedPage(int page)
+    {
+        Page = page;
+        await Request();
+    }
+
+    private async Task Request()
+    {
+        response = await replyService.Pagination(userId: UserId, threadId: ThreadId, upId: UpId, dialogId: DialogId, page: Page, size: PageSize, sort: Sort);
+    }
+}
