@@ -17,7 +17,7 @@ namespace Mzr.Web.Pages
                 ReplyQuery = queryString;
                 if (startTime == null || endTime == null)
                 {
-                    startTime = DateTime.UtcNow.AddDays(-7);
+                    startTime = DateTime.UtcNow.AddDays(-30).AddTicks(-1);
                     endTime = DateTime.UtcNow;
                 }
                 if (endTime - startTime > TimeSpan.FromDays(30))
@@ -27,6 +27,10 @@ namespace Mzr.Web.Pages
                 UsernameQuery = queryString;
             else if (queryType == "dynamicQuery")
                 DynamicQuery = queryString;
+            else if (queryType == "userId")
+                return RedirectToPage("BiliUser", new { userId = Convert.ToInt64(queryString) });
+            else if (queryType == "dynamicId")
+                return RedirectToPage("BiliDynamic", new { dynamicId = Convert.ToInt64(queryString) });
             else
                 return BadRequest(@"Unknown query type: {queryType}.");
 

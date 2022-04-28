@@ -1,0 +1,26 @@
+﻿@page "/user/{userId:long}"
+@layout ContainerLayout
+
+<MudGrid Spacing="1">
+    <MudItem xs="3">
+        <UserCard UserId=@UserId></UserCard>
+    </MudItem>
+    <MudItem xs="9">
+        <MudTabs>
+            <MudTabPanel Text="评论">
+                <ReplyPagination UserId=@UserId Sort=@Sort></ReplyPagination>
+            </MudTabPanel>
+            <MudTabPanel Text="动态">
+                <DynamicPagination UserId=@UserId Sort=@Sort></DynamicPagination>
+            </MudTabPanel>
+        </MudTabs>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    public string Sort { get; set; } = "-time";
+
+}

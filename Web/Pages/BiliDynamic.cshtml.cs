@@ -9,8 +9,8 @@ namespace Mzr.Web.Pages
 {
     public class BiliDynamicModel : PageModel
     {
-        public BiliDynamic Dynamic { get; set; } = null!;
-        public BiliUser Up { get; set; } = null!;
+        public BiliDynamic? Dynamic { get; set; } = null!;
+        public BiliUser? Up { get; set; } = null!;
 
         private readonly IBiliDynamicRepository dynamicRepo;
         private readonly IBiliUserRepository userRepo;
@@ -23,8 +23,11 @@ namespace Mzr.Web.Pages
         public async Task<IActionResult> OnGetAsync(long dynamicId, string replySort = "-time")
         {
             Dynamic = await dynamicRepo.Collection.Find(f => f.DynamicId == dynamicId).FirstOrDefaultAsync();
+            if (Dynamic == null)
+                return NotFound();
+
             Up = await userRepo.Collection.Find(f => f.UserId == Dynamic.UserId).FirstOrDefaultAsync();
-            if(Dynamic == null || Up == null)
+            if(Up == null)
                 return NotFound();
             return Page();
         }

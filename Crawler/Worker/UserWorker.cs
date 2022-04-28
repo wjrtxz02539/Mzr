@@ -46,15 +46,16 @@ namespace Mzr.Service.Crawler.Worker
             var dynamicRepo = host.Services.GetRequiredService<IBiliDynamicRepository>();
             var userRepo = host.Services.GetRequiredService<IBiliUserRepository>();
 
-            var up = userRepo.Collection.Find(f => f.UserId == configuration.UserId).FirstOrDefault() ?? await webUser.FromIdAsync(configuration.UserId);
+            var up = userRepo.Collection.Find(f => f.UserId == configuration.UserId).FirstOrDefault(stoppingToken);
             if (up == null)
             {
-                logger.LogError("User not found. {userId}", configuration.UserId);
-                return;
+                up = await webUser.FromIdAsync(configuration.UserId);
+                if (up == null)
+                    throw new Exception($"User not found: {configuration.UserId}.");
             }
             Status.Username = up.Username ?? string.Empty;
 
-            var logPrefix = $"[{up.Username}]";
+            logPrefix = $"[{up.Username}]";
 
             var replyBlock = new ActionBlock<Func<Task<BiliReply>>>(
                 async func =>
@@ -114,6 +115,7 @@ namespace Mzr.Service.Crawler.Worker
                     Running = true;
                     logger.LogInformation("{logPrefix} Start.", logPrefix);
                     var webDynamic = host.Services.GetRequiredService<WebBiliDynamicRepository>();
+                    
                     await foreach (var dynamic in webDynamic.FromUserIdAsync(input, 
                         skip: configuration.Skip,
                         maxDepth: configuration.MaxDepth,

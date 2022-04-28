@@ -1,0 +1,17 @@
+﻿@page "/"
+@using System.Globalization
+
+<PageTitle>Index</PageTitle>
+
+<p>
+    <b>CurrentCulture</b>: @CultureInfo.CurrentCulture
+</p>
+
+<p>
+    Current UTC: @DateTime.UtcNow
+</p>
+
+<p>
+    Current Local: @(DateTimeTools.SetLocalTimeZone(@DateTime.UtcNow))
+    Current TimeZone: @(DateTimeTools.SetLocalTimeZone(@DateTime.UtcNow).Kind)
+</p>

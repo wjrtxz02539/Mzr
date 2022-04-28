@@ -1,0 +1,34 @@
+﻿@page "/reply"
+@layout ContainerLayout
+
+<ReplyPagination ThreadId=@ThreadId ParentId=@ParentId RootId=@RootId UpId=@UpId UserId=@UserId DialogId=@DialogId Sort=@Sort StartTime=@StartTime EndTime=@EndTime />
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name="threadId")]
+    public long? ThreadId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="parentId")]
+    public long? ParentId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="rootId")]
+    public long? RootId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="upId")]
+    public long? UpId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="userId")]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="dialogId")]
+    public long? DialogId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name="sort")]
+    public string? Sort { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "startTime")]
+    public DateTime? StartTime { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "endTime")]
+    public DateTime? EndTime { get; set; } = null;
+}

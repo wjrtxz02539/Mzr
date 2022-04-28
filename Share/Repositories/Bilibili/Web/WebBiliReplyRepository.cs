@@ -45,6 +45,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
         private string logPrefix = "";
         private readonly Request request;
         private readonly IBiliDynamicRunRecordRepository runRecordRepo;
+        private readonly IBiliDynamicRepository dynamicRepo;
         private readonly IBiliUserRepository userRepo;
         private readonly IBiliReplyRepository replyRepo;
         private readonly WebBiliUserRepository webUserRepo;
@@ -55,6 +56,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 
             request = host.Services.GetRequiredService<Request>();
             runRecordRepo = host.Services.GetRequiredService<IBiliDynamicRunRecordRepository>();
+            dynamicRepo = host.Services.GetRequiredService<IBiliDynamicRepository>();
             userRepo = host.Services.GetRequiredService<IBiliUserRepository>();
             replyRepo = host.Services.GetRequiredService<IBiliReplyRepository>();
             webUserRepo = host.Services.GetRequiredService<WebBiliUserRepository>();
@@ -77,8 +79,16 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 }
             }
 
-            logPrefix = $"[{up.Username}:{biliDynamic.DynamicId}]";
-            var runRecordCursor = runRecordRepo.Collection.Find(x => x.DynamicId == biliDynamic.DynamicId).SortByDescending(x => x.Id).Limit(1).ToList();
+            var dynamic = await dynamicRepo.Collection.Find(f => f.DynamicId == biliDynamic.DynamicId).FirstOrDefaultAsync();
+            if(dynamic == null)
+            {
+                logger.LogError("{logPrefix} Dynamic not found in database: {dynamicId}.", logPrefix, biliDynamic.DynamicId);
+                yield break;
+            }
+
+
+            logPrefix = $"[{up.Username}:{dynamic.DynamicId}]";
+            var runRecordCursor = runRecordRepo.Collection.Find(x => x.DynamicId == dynamic.DynamicId).SortByDescending(x => x.Id).Limit(1).ToList();
             BiliDynamicRunRecord? lastRunRecord;
             if (runRecordCursor.Count > 0)
                 lastRunRecord = runRecordCursor[0];
@@ -86,8 +96,8 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 lastRunRecord = null;
 
             var query = HttpUtility.ParseQueryString(baseQuery);
-            query["type"] = threadMap[biliDynamic.DynamicType].ToString();
-            query["oid"] = biliDynamic.ThreadId.ToString();
+            query["type"] = threadMap[dynamic.DynamicType].ToString();
+            query["oid"] = dynamic.ThreadId.ToString();
             query["next"] = nextPos.ToString();
 
             var uriBuilder = new UriBuilder(threadUri);
@@ -124,7 +134,13 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 && lastRunRecord.EndTime != null
                 && cursor.Count == lastRunRecord.Total)
             {
-                logger.LogDebug("{logPrefix} Skip beacuse no new comments.", logPrefix);
+                if (dynamic.UpdatedTime == null)
+                {
+                    dynamic.UpdatedTime = lastRunRecord.StartTime;
+                    dynamic.Reply = lastRunRecord.Total;
+                    await dynamicRepo.UpdateAsync(dynamic);
+                }
+                logger.LogInformation("{logPrefix} Skip beacuse no new comments.", logPrefix);
                 yield break;
             }
 
@@ -137,9 +153,9 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             {
                 runRecord = new BiliDynamicRunRecord()
                 {
-                    DynamicId = biliDynamic.DynamicId,
-                    View = biliDynamic.View,
-                    Like = biliDynamic.Like,
+                    DynamicId = dynamic.DynamicId,
+                    View = dynamic.View,
+                    Like = dynamic.Like,
                     Total = cursor.Count,
                     StartTime = DateTime.UtcNow
                 };
@@ -196,7 +212,11 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             runRecord.Progress = 0;
             runRecord.EndTime = DateTime.UtcNow;
             await runRecordRepo.UpdateAsync(runRecord);
-            logger.LogDebug("{logPrefix} Done.", logPrefix);
+
+            dynamic.Reply = runRecord.Total;
+            dynamic.UpdatedTime = runRecord.StartTime;
+            await dynamicRepo.UpdateAsync(dynamic);
+            logger.LogInformation("{logPrefix} Done.", logPrefix);
         }
 
         public async Task<BiliReply> FromRawAsync(RawBiliReply raw, BiliUser up, BiliDynamic dynamic, int requestTimeout = 10)

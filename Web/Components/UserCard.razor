@@ -2,6 +2,10 @@
 {
     <LoadingScreen />
 }
+else if (user == null)
+{
+    <NotFound />
+}
 else
 {
     <PageTitle>用户: @user?.Username</PageTitle>

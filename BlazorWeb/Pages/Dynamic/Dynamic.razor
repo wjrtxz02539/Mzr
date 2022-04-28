@@ -1,0 +1,22 @@
+﻿@page "/dynamic"
+@layout ContainerLayout
+
+<DynamicPagination UserId=@UserId DescriptionQuery=@DescriptionQuery Sort=@Sort StartTime=@StartTime EndTime=@EndTime></DynamicPagination>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "descriptionQuery")]
+    public string? DescriptionQuery { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "startTime")]
+    public DateTime? StartTime { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "endTime")]
+    public DateTime? EndTime { get; set; } = null;
+}

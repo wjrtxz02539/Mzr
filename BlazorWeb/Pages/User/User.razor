@@ -1,0 +1,13 @@
+﻿@page "/user"
+@layout ContainerLayout
+
+<UserPagination UsernameQuery=@UsernameQuery Sort=@Sort></UserPagination>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "usernameQuery")]
+    public string? UsernameQuery { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "";
+}

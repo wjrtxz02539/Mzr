@@ -1,0 +1,177 @@
+﻿@page "/dynamic-pagination"
+@inject BiliDynamicService dynamicService
+@inject BiliUserService userService
+
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliDynamic" AllowUnsorted="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">动态列表</MudText>
+        <MudSpacer />
+        <MudDateRangePicker Label="时间段" Editable="true" DateRangeChanged=@DateRangeChanged DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss"></MudDateRangePicker>
+        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="动态内容" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="width:3rem;" />
+        <col style="width:10rem;" />
+        <col style="width:6rem" />
+        <col style="width:6rem" />
+        <col style="width:3rem" />
+        <col style="width:12rem;" />
+        <col />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh Style="text-align: center">头像</MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="BiliDynamic">用户</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="like" T="BiliDynamic">点赞</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="view" T="BiliDynamic">观看</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">评论</MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="time" T="BiliDynamic">时间</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">动态</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="头像"><MudAvatar Image="@(GetUser(context.UserId)?.Avatar)"></MudAvatar></MudTd>
+        <MudTd DataLabel="用户">
+            <MudLink Href=@($"/user/{@context.UserId}") Target="_blank">
+                @(GetUser(context.UserId)?.Username)
+            </MudLink>
+        </MudTd>
+        <MudTd DataLabel="点赞">@context.Like</MudTd>
+        <MudTd DataLabel="观看">
+            @context.View
+        </MudTd>
+        <MudTd DataLabel="评论">
+            <MudButton Variant=@Variant.Text Href=@($"/dynamic/threadId/{@context.ThreadId}") Target="_blank">
+                @(GetRunRecord(context.DynamicId)?.Total ?? 0)
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="时间">
+            <MudText>
+                @context.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="动态">@context.Description</MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>找不到相应动态信息</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>加载中...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudScrollToTop>
+    <MudFab Color="Color.Tertiary" Icon="@Icons.Filled.ArrowCircleUp" />
+</MudScrollToTop>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "descriptionQuery")]
+    public string? DescriptionQuery { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "startTime")]
+    public DateTime? StartTime { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "endTime")]
+    public DateTime? EndTime { get; set; } = null;
+
+    private List<BiliDynamic> pagedData = new();
+    private MudTable<BiliDynamic> table = default!;
+    private string dynamicCardTooltipStyle = string.Empty;
+
+    private Dictionary<long, BiliUser?> userDict = new();
+    private Dictionary<long, BiliDynamicRunRecord?> recordDict = new();
+    private string? descriptionQuery = null;
+    private string sort = null;
+    private bool loading = true;
+    private DateTime? startTime;
+    private DateTime? endTime;
+    private DateRange dateRange => new DateRange(startTime?.ToLocalTime(), endTime?.ToLocalTime());
+
+    protected override void OnInitialized()
+    {
+        sort = Sort;
+        descriptionQuery = DescriptionQuery;
+        startTime = StartTime;
+        endTime = EndTime;
+    }
+
+    private async Task<TableData<BiliDynamic>> ServerDataReload(TableState state)
+    {
+        loading = true;
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(state.SortLabel))
+        {
+            sort = state.SortLabel;
+            if (state.SortDirection == MudBlazor.SortDirection.Descending)
+                sort = $"-{sort}";
+        }
+
+        var response = await dynamicService.PaginationAsync(
+            userId: UserId,
+            page: state.Page + 1,
+            size: state.PageSize,
+            sort: sort,
+            descriptionQuery: descriptionQuery,
+            startTime: startTime,
+            endTime: endTime
+        );
+
+        userDict.Clear();
+        recordDict.Clear();
+        foreach(var item in response.Items)
+        {
+            if (!userDict.ContainsKey(item.UserId))
+                userDict.TryAdd(item.UserId, await userService.GetByUserId(item.UserId));
+            recordDict.TryAdd(item.DynamicId, await dynamicService.GetLatestRunRecord(item.DynamicId));
+        }
+
+        return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
+    }
+
+    private void OnSearch(string text)
+    {
+        descriptionQuery = text;
+        table.ReloadServerData();
+    }
+
+    private void DateRangeChanged(DateRange dateRange)
+    {
+        if (dateRange.Start.HasValue)
+        {
+            dateRange.Start = DateTimeTools.SetLocalTimeZone(dateRange.Start.Value);
+            startTime = dateRange.Start?.ToUniversalTime();
+        }
+
+        if (dateRange.End.HasValue)
+        {
+            dateRange.End = DateTimeTools.SetLocalTimeZone(dateRange.End.Value);
+            endTime = dateRange.End?.ToUniversalTime();
+        }
+
+        table.ReloadServerData();
+    }
+
+    private BiliUser? GetUser(long userId)
+    {
+        if (userDict.TryGetValue(userId, out BiliUser? value))
+            return value;
+        return value;
+    }
+
+    private BiliDynamicRunRecord? GetRunRecord(long dynamicId)
+    {
+        if (recordDict.TryGetValue(dynamicId, out BiliDynamicRunRecord? value))
+            return value;
+        return value;
+    }
+}

@@ -1,0 +1,17 @@
+﻿@page "/dynamic/threadId/{threadId:long}"
+@layout ContainerLayout
+
+<MudGrid>
+    <MudItem xs="12">
+        <DynamicCard ThreadId=@ThreadId PaperWidth="auto"></DynamicCard>
+    </MudItem>
+    <MudItem xs="12">
+        <ReplyPagination ThreadId=@ThreadId Sort="-time"></ReplyPagination>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public long? ThreadId { get; set; } = null;
+
+}

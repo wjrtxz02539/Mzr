@@ -1,0 +1,71 @@
+﻿@page "/dynamic-card/{dynamicId:long}"
+@inject BiliDynamicService dynamicService
+@inject BiliUserService userService
+@inject IBiliReplyRepository replyRepo
+
+<MudPaper Width=@PaperWidth Elevation=@PaperElevation>
+    <MudCard>
+        <MudCardHeader>
+            <CardHeaderContent>
+                <MudGrid Spacing="0">
+                    <MudItem xs="12">
+                        <MudText Typo=@Typo.h5>@user?.Username</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Align=@Align.Start Typo=@Typo.subtitle1><i class="fa-solid fa-thumbs-up"></i>@dynamic?.Like</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo=@Typo.subtitle1><i class="fa-solid fa-eye"></i>@dynamic?.View</MudText>
+                    </MudItem>
+                </MudGrid>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudText Typo=@Typo.body2>@dynamic?.Description</MudText>
+        </MudCardContent>
+        <MudCardActions>
+            <MudText Typo=@Typo.subtitle1 Align=@Align.Start>@dynamic?.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+            <MudSpacer />
+            @if (runRecord?.Total > 0)
+            {
+                <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/{dynamic?.DynamicId}") Target="_blank">@(runRecord?.Total)条评论</MudButton>
+            }
+        </MudCardActions>
+    </MudCard>
+</MudPaper>
+@code {
+    [Parameter]
+    public long? DynamicId { get; set; } = null;
+    [Parameter]
+    public BiliDynamic? Dynamic { get; set; } = null;
+    [Parameter]
+    public long? ThreadId { get; set; } = null;
+    [Parameter]
+    public int PaperElevation { get; set; } = 1;
+    [Parameter]
+    public string PaperWidth { get; set; } = "300px";
+
+    private BiliDynamic? dynamic;
+    private BiliUser? user;
+    private BiliDynamicRunRecord? runRecord;
+    private long replyCount;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Dynamic != null)
+            dynamic = Dynamic;
+        else if (DynamicId.HasValue)
+            dynamic = await dynamicService.GetByDynamicId(DynamicId.Value);
+        else if (ThreadId.HasValue)
+            dynamic = await dynamicService.GetByThreadId(ThreadId.Value);
+
+        if (dynamic != null)
+        {
+            replyCount = await replyRepo.Collection.CountDocumentsAsync(f => f.ThreadId == dynamic.ThreadId);
+            runRecord = await dynamicService.GetLatestRunRecord(dynamic.DynamicId);
+            user = await userService.GetByUserId(dynamic.UserId);
+        }
+
+    }
+
+}

@@ -1,0 +1,193 @@
+﻿@page "/reply-pagination"
+@inject BiliReplyService replyService
+
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">评论列表</MudText>
+        <MudSpacer />
+        <MudDateRangePicker Label="时间段" Editable="true" DateRangeChanged=@DateRangeChanged DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss"></MudDateRangePicker>
+        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="评论内容" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="width:3rem;" />
+        <col style="width:10rem;" />
+        <col style="width:6rem" />
+        <col style="width:3rem" />
+        <col style="width:12rem;" />
+        <col />
+        <col style="width:2rem" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh Style="text-align: center">头像</MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="BiliReply">用户名</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="like" T="BiliReply">点赞</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="replies_count" T="BiliReply">回复</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="time" T="BiliReply">时间</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">评论</MudTh>
+        <MudTh Style="text-align: center">操作</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="头像"><MudAvatar Image="@context.User.Avatar"></MudAvatar></MudTd>
+        <MudTd DataLabel="用户名">
+            <MudLink Href=@($"/user/{@context.UserId}") Target="_blank">
+                @context.User.Username
+            </MudLink>
+        </MudTd>
+        <MudTd DataLabel="点赞">@context.Like</MudTd>
+        <MudTd DataLabel="回复">
+            <MudButton Variant=@Variant.Text Href=@($"/reply?parentId={context.ReplyId}&sort=time") Target="_blank" Disabled=@(context.RepliesCount == 0)>@context.RepliesCount</MudButton>
+        </MudTd>
+        <MudTd DataLabel="时间">
+            <MudText>
+                @context.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
+            </MudText>
+        </MudTd>
+        <MudTd DataLabel="评论">@context.Content</MudTd>
+        <MudTd DataLabel="操作">
+            <MudTooltip Placement=@Placement.Left>
+                <ChildContent>
+                    <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/threadId/{context.ThreadId}") Target="_blank">动态</MudButton>
+                </ChildContent>
+                <TooltipContent>
+                    <DynamicCard ThreadId=@context.ThreadId PaperElevation=0 PaperWidth="500px"></DynamicCard>
+                </TooltipContent>
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>找不到相应评论信息</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>加载中...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudScrollToTop>
+    <MudFab Color="Color.Tertiary" Icon="@Icons.Filled.ArrowCircleUp" />
+</MudScrollToTop>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "threadId")]
+    public long? ThreadId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "parentId")]
+    public long? ParentId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "rootId")]
+    public long? RootId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "upId")]
+    public long? UpId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "userId")]
+    public long? UserId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "dialogId")]
+    public long? DialogId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "startTime")]
+    public DateTime? StartTime { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "endTime")]
+    public DateTime? EndTime { get; set; } = null;
+
+    private List<BiliReply> pagedData = new();
+    private MudTable<BiliReply> table = default!;
+    private string dynamicCardTooltipStyle = string.Empty;
+
+    private string? replyQuery = null;
+    private string? sort = null;
+    private bool loading = true;
+    private DateTime? startTime;
+    private DateTime? endTime;
+    private DateRange dateRange => new DateRange(startTime?.ToLocalTime(), endTime?.ToLocalTime());
+
+    protected override void OnInitialized()
+    {
+        sort = Sort;
+        startTime = StartTime;
+        endTime = EndTime;
+    }
+
+    private void StrictDateQuery()
+    {
+        if (ThreadId != null || ParentId != null || RootId != null || UserId != null || DialogId != null)
+            return;
+
+        if (!startTime.HasValue && !endTime.HasValue)
+        {
+            endTime = DateTime.UtcNow;
+            startTime = endTime.Value.AddDays(-30).AddTicks(1);
+        }
+        else if (startTime.HasValue && !endTime.HasValue)
+            endTime = startTime!.Value.AddDays(30).AddTicks(-1);
+        else if (!startTime.HasValue && endTime.HasValue)
+            startTime = endTime!.Value.AddDays(-30).AddTicks(1);
+        else if ((endTime - startTime) > TimeSpan.FromDays(31))
+            endTime = startTime!.Value.AddDays(30).AddTicks(-1);
+
+        return;
+    }
+
+    private async Task<TableData<BiliReply>> ServerDataReload(TableState state)
+    {
+        StrictDateQuery();
+        loading = true;
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(state.SortLabel))
+        {
+            sort = state.SortLabel;
+            if (state.SortDirection == MudBlazor.SortDirection.Descending)
+                sort = $"-{sort}";
+        }
+
+        var response = await replyService.PaginationAsync(
+            userId: UserId,
+            threadId: ThreadId,
+            upId: UpId,
+            dialogId: DialogId,
+            page: state.Page + 1,
+            size: state.PageSize,
+            sort: sort,
+            contentQuery: replyQuery,
+            startTime: startTime,
+            endTime: endTime,
+            root: RootId,
+            parent: ParentId
+        );
+
+        return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
+    }
+
+    private void OnSearch(string text)
+    {
+        replyQuery = text;
+        table.ReloadServerData();
+    }
+
+    private void DateRangeChanged(DateRange dateRange)
+    {
+        if (dateRange.Start.HasValue)
+        {
+            dateRange.Start = DateTimeTools.SetLocalTimeZone(dateRange.Start.Value);
+            startTime = dateRange.Start?.ToUniversalTime();
+        }
+
+        if (dateRange.End.HasValue)
+        {
+            dateRange.End = DateTimeTools.SetLocalTimeZone(dateRange.End.Value);
+            endTime = dateRange.End?.ToUniversalTime();
+        }
+
+        table.ReloadServerData();
+    }
+}

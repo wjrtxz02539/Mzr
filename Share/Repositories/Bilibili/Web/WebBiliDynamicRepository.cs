@@ -67,7 +67,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     if (document == null)
                         continue;
                     dynamicList.Add(document);
-                    logger.LogInformation("{logPrefix} Found dynamic {dynamicId} at {time}.", logPrefix, document.DynamicId, document.Time);
+                    logger.LogDebug("{logPrefix} Found dynamic {dynamicId} at {time}.", logPrefix, document.DynamicId, document.Time);
                 }
 
                 DateTime? OldestTime = null;

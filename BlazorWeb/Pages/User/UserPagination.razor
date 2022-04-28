@@ -1,0 +1,121 @@
+﻿@page "/user-pagination"
+@inject BiliUserService userService
+
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="Tuple<BiliUser, long>" AllowUnsorted="false">
+    <ToolBarContent>
+        <MudText Typo="Typo.h6">用户列表</MudText>
+        <MudSpacer />
+        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="用户名" Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="width:3rem;" />
+        <col style="width:10rem;" />
+        <col style="width:6rem" />
+        <col style="width:7rem" />
+        <col style="width:6rem;" />
+        <col />
+        <col />
+        <col />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh Style="text-align: center">头像</MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="Tuple<BiliUser, long>">用户名</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="level" T="Tuple<BiliUser, long>">等级</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">会员</MudTh>
+        <MudTh Style="text-align: center">评论</MudTh>
+        <MudTh Style="text-align: center">挂件</MudTh>
+        <MudTh Style="text-align: center">大航海</MudTh>
+        <MudTh Style="text-align: center">签名</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="头像"><MudAvatar Image="@context.Item1.Avatar"></MudAvatar></MudTd>
+        <MudTd DataLabel="用户名">
+            <MudLink Href=@($"/user/{@context.Item1.UserId}") Target="_blank">
+                @context.Item1.Username
+            </MudLink>
+        </MudTd>
+        <MudTd DataLabel="等级">Lv.@context.Item1.Level</MudTd>
+        <MudTd DataLabel="会员">
+            @context.Item1.VipString
+        </MudTd>
+        <MudTd DataLabel="评论">
+            <MudButton Variant=@Variant.Text Target="_blank" Href=@($"/user/{context.Item1.UserId}")>
+                @context.Item2
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="挂件">
+            @(string.Join(',', @context.Item1.Pendants))
+        </MudTd>
+        <MudTd DataLabel="大航海">@(string.Join(',', @context.Item1.Sailings.Select(x => x.Name)))</MudTd>
+        <MudTd DataLabel="签名">
+            @context.Item1.Sign
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>找不到相应用户信息</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>加载中...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>
+
+<MudScrollToTop>
+    <MudFab Color="Color.Tertiary" Icon="@Icons.Filled.ArrowCircleUp" />
+</MudScrollToTop>
+
+@code {
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "usernameQuery")]
+    public string? UsernameQuery { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "sort")]
+    public string Sort { get; set; } = "";
+
+    private MudTable<Tuple<BiliUser, long>> table = default!;
+
+    private string? usernameQuery = null;
+    private string? sort = null;
+    private bool loading = true;
+
+    protected override void OnInitialized()
+    {
+        sort = Sort;
+        usernameQuery = UsernameQuery;
+    }
+
+    private async Task<TableData<Tuple<BiliUser, long>>> ServerDataReload(TableState state)
+    {
+        loading = true;
+        StateHasChanged();
+
+        if (!string.IsNullOrEmpty(state.SortLabel))
+        {
+            sort = state.SortLabel;
+            if (state.SortDirection == MudBlazor.SortDirection.Descending)
+                sort = $"-{sort}";
+        }
+
+        var response = await userService.PaginationAsync(
+            page: state.Page + 1,
+            size: state.PageSize,
+            sort: sort,
+            usernameQuery: usernameQuery
+        );
+
+        var item = new List<Tuple<BiliUser, long>>();
+        foreach(var user in response.Items)
+            item.Add(new Tuple<BiliUser, long>(user, await userService.GetUserReplyCount(user.UserId)));
+
+        return new() { Items = item, TotalItems = response.MetaData.TotalCount };
+    }
+
+    private void OnSearch(string text)
+    {
+        usernameQuery = text;
+        table.ReloadServerData();
+    }
+}

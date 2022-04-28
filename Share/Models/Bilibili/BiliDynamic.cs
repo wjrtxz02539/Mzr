@@ -38,6 +38,12 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("time")]
         public DateTime Time { get; set; }
 
+        [BsonElement("updated_time")]
+        public DateTime? UpdatedTime { get; set; }
+
+        [BsonElement("reply")]
+        public int? Reply { get; set; } = null;
+
         [BsonElement("view")]
         public int View { get; set; }
 
