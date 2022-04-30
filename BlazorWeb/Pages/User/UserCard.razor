@@ -1,6 +1,7 @@
 ﻿@page "/user-card/{userId:long}"
 @inject BiliUserService userService
 @inject IBiliReplyRepository replyRepo
+@attribute [Authorize]
 
 <MudPaper Width="300px">
 <MudCard>

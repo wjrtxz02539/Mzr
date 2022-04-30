@@ -1,5 +1,8 @@
 ﻿@page "/reply"
 @layout ContainerLayout
+@attribute [Authorize]
+
+<PageTitle>评论查询</PageTitle>
 
 <ReplyPagination ThreadId=@ThreadId ParentId=@ParentId RootId=@RootId UpId=@UpId UserId=@UserId DialogId=@DialogId Sort=@Sort StartTime=@StartTime EndTime=@EndTime />
 

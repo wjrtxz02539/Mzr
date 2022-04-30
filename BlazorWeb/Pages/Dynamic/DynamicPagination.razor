@@ -1,6 +1,7 @@
 ﻿@page "/dynamic-pagination"
 @inject BiliDynamicService dynamicService
 @inject BiliUserService userService
+@attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliDynamic" AllowUnsorted="false">
     <ToolBarContent>
@@ -90,7 +91,7 @@
     private Dictionary<long, BiliUser?> userDict = new();
     private Dictionary<long, BiliDynamicRunRecord?> recordDict = new();
     private string? descriptionQuery = null;
-    private string sort = null;
+    private string? sort = null;
     private bool loading = true;
     private DateTime? startTime;
     private DateTime? endTime;
@@ -120,7 +121,7 @@
             userId: UserId,
             page: state.Page + 1,
             size: state.PageSize,
-            sort: sort,
+            sort: sort ?? string.Empty,
             descriptionQuery: descriptionQuery,
             startTime: startTime,
             endTime: endTime

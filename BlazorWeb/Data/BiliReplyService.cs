@@ -20,25 +20,37 @@ namespace BlazorWeb.Data
             this.dynamicRepo = dynamicRepo;
         }
 
+        public FilterDefinition<BiliReply> FilterBuilder(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null, 
+            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null)
+        {
+            var filterBuilder = Builders<BiliReply>.Filter;
+            FilterDefinition<BiliReply> filter = new BsonDocument();
+            if (userId.HasValue)
+                filter &= filterBuilder.Eq(f => f.UserId, userId);
+            if (threadId.HasValue)
+                filter &= filterBuilder.Eq(f => f.ThreadId, threadId);
+            if (upId.HasValue)
+                filter &= filterBuilder.Eq(f => f.UpId, upId);
+            if (dialogId.HasValue)
+                filter &= filterBuilder.Eq(f => f.Dialog, dialogId);
+            if (!string.IsNullOrEmpty(contentQuery))
+                filter &= filterBuilder.Regex(f => f.Content, new BsonRegularExpression($"/.*{contentQuery}.*/i "));
+            if (root.HasValue)
+                filter &= filterBuilder.Eq(f => f.Root, root);
+            if (parent.HasValue)
+                filter &= filterBuilder.Eq(f => f.Parent, parent);
+            if (startTime.HasValue)
+                filter &= filterBuilder.Gte(f => f.Time, startTime.Value.ToUniversalTime());
+            if (endTime.HasValue)
+                filter &= filterBuilder.Lte(f => f.Time, endTime.Value.ToUniversalTime());
+            return filter;
+        }
+
         public async Task<List<Tuple<int, long, BiliUser?>>> GetTopUsersAsync(DateTime startTime, DateTime endTime, long? upId = null,
-            long? dynamicId = null, long? threadId = null, int limit = 10, CancellationToken cancellationToken = default)
+            long? threadId = null, int limit = 10, CancellationToken cancellationToken = default)
         {
             var builder = Builders<BiliReply>.Filter;
-            var filter = builder.Gte(f => f.Time, startTime.ToUniversalTime()) & builder.Lte(f => f.Time, endTime.ToUniversalTime());
-
-            if (upId.HasValue)
-                filter &= builder.Eq(f => f.UpId, upId);
-
-            if (dynamicId.HasValue)
-            {
-                var dynamic = await dynamicRepo.Collection.Find(f => f.DynamicId == dynamicId).FirstOrDefaultAsync();
-                if (dynamic != null)
-                    threadId = dynamic.ThreadId;
-            }
-
-            if (threadId.HasValue)
-                filter &= builder.Eq(f => f.ThreadId, threadId);
-
+            var filter = FilterBuilder(upId: upId, threadId: threadId, startTime: startTime, endTime: endTime);
 
             PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
             {
@@ -49,7 +61,7 @@ namespace BlazorWeb.Data
                 BsonDocument.Parse("{$lookup: {\"from\": \"bili_user\", \"localField\": \"_id\", \"foreignField\": \"user_id\", \"as\": \"user\"}}")
             };
 
-            var results = await replyRepo.Collection.Aggregate(pipeline).ToListAsync(cancellationToken);
+            var results = await replyRepo.Collection.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
 
             var result = new List<Tuple<int, long, BiliUser?>>();
             foreach (var item in results)
@@ -71,34 +83,12 @@ namespace BlazorWeb.Data
             return result;
         }
 
-        public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId, long? threadId, long? upId, long? dialogId, int page = 1, int size = 0,
-            string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null)
+        public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null, 
+            int page = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, 
+            long? root = null, long? parent = null)
         {
-            var filterBuilder = Builders<BiliReply>.Filter;
-            FilterDefinition<BiliReply> filter;
-            if (userId.HasValue)
-                filter = filterBuilder.Eq(f => f.UserId, userId);
-            else if (threadId.HasValue)
-                filter = filterBuilder.Eq(f => f.ThreadId, threadId);
-            else if (upId.HasValue)
-                filter = filterBuilder.Eq(f => f.UpId, upId);
-            else if (dialogId.HasValue)
-                filter = filterBuilder.Eq(f => f.Dialog, dialogId);
-            else
-                filter = new BsonDocument();
-
-            if (!string.IsNullOrEmpty(contentQuery))
-                filter &= filterBuilder.Regex(f => f.Content, new BsonRegularExpression($"/.*{contentQuery}.*/i "));
-            if (root.HasValue)
-                filter &= filterBuilder.Eq(f => f.Root, root);
-            if (parent.HasValue)
-                filter &= filterBuilder.Eq(f => f.Parent, parent);
-
-            if (startTime.HasValue)
-                filter &= filterBuilder.Gte(f => f.Time, startTime.Value.ToUniversalTime());
-
-            if (endTime.HasValue)
-                filter &= filterBuilder.Lte(f => f.Time, endTime.Value.ToUniversalTime());
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId, 
+                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
 
             var builder = Builders<BiliReply>.Sort;
             SortDefinition<BiliReply> sortDefinition = sort switch
@@ -116,6 +106,29 @@ namespace BlazorWeb.Data
             var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync();
             var totalCount = (int)await replyRepo.Collection.CountDocumentsAsync(filter);
             return new PagingResponse<BiliReply>(result, totalCount: totalCount, pageSize: size, currentPage: page);
+        }
+
+        public async Task<double[]> HourlyAggregateAsync(long? userId = null, long? threadId = null, long? upId = null, string? contentQuery = null,
+            DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
+        {
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, contentQuery: contentQuery, startTime: startTime, endTime: endTime);
+
+            PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
+            {
+                new BsonDocument("$match", filter.Render(replyRepo.Collection.DocumentSerializer, replyRepo.Collection.Settings.SerializerRegistry)),
+                BsonDocument.Parse("{$project: {hour: { $hour: {date: \"$time\", timezone: \"Asia/Shanghai\"} }}}"),
+                BsonDocument.Parse("{$group: {_id: \"$hour\", count: {$sum: 1}}}")
+            };
+
+            var response = await replyRepo.Collection.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
+
+            var result = new double[24];
+            foreach(var item in response)
+            {
+                result[item["_id"].AsInt32] = (double)item["count"].AsInt32;
+            }
+
+            return result;
         }
     }
 }

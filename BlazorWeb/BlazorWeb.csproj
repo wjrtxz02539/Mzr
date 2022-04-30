@@ -1,25 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>d2356c41-712c-493c-a3f1-2c53145ee105</UserSecretsId>
-    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>d2356c41-712c-493c-a3f1-2c53145ee105</UserSecretsId>
+		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.15.0" />
-    <PackageReference Include="MudBlazor" Version="6.0.9" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="6.0.4" />
+		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
+		<PackageReference Include="MongoDB.Driver" Version="2.15.0" />
+		<PackageReference Include="MudBlazor" Version="6.0.9" />
+		<PackageReference Include="Microsoft.Identity.Web" Version="1.16.0" />
+		<PackageReference Include="Microsoft.Identity.Web.UI" Version="1.16.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\css\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="wwwroot\css\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Share\Share.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Share\Share.csproj" />
+	</ItemGroup>
 
 </Project>

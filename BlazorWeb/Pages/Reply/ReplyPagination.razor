@@ -1,11 +1,12 @@
 ﻿@page "/reply-pagination"
 @inject BiliReplyService replyService
+@attribute [Authorize]
 
-<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false">
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false" >
     <ToolBarContent>
         <MudText Typo="Typo.h6">评论列表</MudText>
         <MudSpacer />
-        <MudDateRangePicker Label="时间段" Editable="true" DateRangeChanged=@DateRangeChanged DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss"></MudDateRangePicker>
+        <MudDateRangePicker Label=@dateQueryLabel Editable="true" DateRangeChanged=@DateRangeChanged DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss"></MudDateRangePicker>
         <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="评论内容" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
     </ToolBarContent>
@@ -117,22 +118,25 @@
         endTime = EndTime;
     }
 
+    private bool shouldStrictDate => !(ThreadId != null || ParentId != null || RootId != null || UserId != null || DialogId != null);
+    private string dateQueryLabel => shouldStrictDate ? "时间段（最多7天）" : "时间段";
+
     private void StrictDateQuery()
     {
-        if (ThreadId != null || ParentId != null || RootId != null || UserId != null || DialogId != null)
+        if (!shouldStrictDate)
             return;
 
         if (!startTime.HasValue && !endTime.HasValue)
         {
             endTime = DateTime.UtcNow;
-            startTime = endTime.Value.AddDays(-30).AddTicks(1);
+            startTime = endTime.Value.AddDays(-7).AddTicks(1);
         }
         else if (startTime.HasValue && !endTime.HasValue)
-            endTime = startTime!.Value.AddDays(30).AddTicks(-1);
+            endTime = startTime!.Value.AddDays(7).AddTicks(-1);
         else if (!startTime.HasValue && endTime.HasValue)
-            startTime = endTime!.Value.AddDays(-30).AddTicks(1);
+            startTime = endTime!.Value.AddDays(-7).AddTicks(1);
         else if ((endTime - startTime) > TimeSpan.FromDays(31))
-            endTime = startTime!.Value.AddDays(30).AddTicks(-1);
+            endTime = startTime!.Value.AddDays(7).AddTicks(-1);
 
         return;
     }
@@ -157,7 +161,7 @@
             dialogId: DialogId,
             page: state.Page + 1,
             size: state.PageSize,
-            sort: sort,
+            sort: sort ?? string.Empty,
             contentQuery: replyQuery,
             startTime: startTime,
             endTime: endTime,

@@ -1,6 +1,8 @@
 ﻿@page "/dynamic"
 @layout ContainerLayout
+@attribute [Authorize]
 
+<PageTitle>动态查询</PageTitle>
 <DynamicPagination UserId=@UserId DescriptionQuery=@DescriptionQuery Sort=@Sort StartTime=@StartTime EndTime=@EndTime></DynamicPagination>
 
 @code {

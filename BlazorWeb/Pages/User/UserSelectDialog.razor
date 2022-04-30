@@ -1,0 +1,36 @@
+﻿
+<MudDialog Style="width: 1000px">
+    <DialogContent>
+        <UserPagination OnUsersSelected=@OnUsersSelected PageSize="5" MiniMode="true" Dense="true"></UserPagination>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">取消</MudButton>
+        <MudButton Color="@Color.Success" Variant="Variant.Filled" OnClick="Submit">完成</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<List<BiliUser>> UsersSelected { get; set; }
+
+    private List<BiliUser> users = new();
+
+    private void OnUsersSelected(List<BiliUser> users)
+    {
+        this.users = users; 
+    }
+
+    private async Task Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+        await UsersSelected.InvokeAsync(users);
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+}

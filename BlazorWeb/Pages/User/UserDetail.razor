@@ -1,5 +1,8 @@
 ﻿@page "/user/{userId:long}"
 @layout ContainerLayout
+@attribute [Authorize]
+
+<PageTitle>用户详情</PageTitle>
 
 <MudGrid Spacing="1">
     <MudItem xs="3">

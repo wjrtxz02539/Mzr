@@ -2,6 +2,7 @@
 @inject BiliDynamicService dynamicService
 @inject BiliUserService userService
 @inject IBiliReplyRepository replyRepo
+@attribute [Authorize]
 
 <MudPaper Width=@PaperWidth Elevation=@PaperElevation>
     <MudCard>

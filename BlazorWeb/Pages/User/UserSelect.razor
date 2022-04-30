@@ -1,0 +1,52 @@
+﻿@page "/user-select"
+@inject BiliUserService userService
+@attribute [Authorize]
+
+<MudTextField @bind-Value=@usernameQuery  DebounceInterval="500" T=@string OnDebounceIntervalElapsed=@ValueChanged></MudTextField>
+
+@if (!string.IsNullOrEmpty(usernameQuery))
+{
+    <MudTable ServerData=LoadData T=@BiliUser @ref=@table SelectedItemChanged=@SelectedItem>
+
+        <HeaderContent>
+            <MudTh>用户名</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="用户名">@context.Username</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+
+@code {
+    [Parameter]
+    public string UsernameQuery { get; set; } = string.Empty;
+    [Parameter]
+    public EventCallback<BiliUser> UserSelected { get; set; }
+
+    private string usernameQuery = string.Empty;
+    private MudTable<BiliUser> table = null!;
+
+
+    protected override void OnInitialized()
+    {
+        usernameQuery = UsernameQuery;
+    }
+
+    private async Task ValueChanged(string text)
+    {
+        if(!string.IsNullOrEmpty(usernameQuery))
+            await table.ReloadServerData();
+    }
+
+    private async Task<TableData<BiliUser>> LoadData(TableState state)
+    {
+        var response = await userService.PaginationAsync(usernameQuery: usernameQuery);
+
+        return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
+    }
+
+    private async Task SelectedItem(BiliUser user)
+    {
+        await UserSelected.InvokeAsync(user);
+    }
+}

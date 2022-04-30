@@ -1,5 +1,8 @@
 ﻿@page "/dynamic/threadId/{threadId:long}"
 @layout ContainerLayout
+@attribute [Authorize]
+
+<PageTitle>动态详情</PageTitle>
 
 <MudGrid>
     <MudItem xs="12">

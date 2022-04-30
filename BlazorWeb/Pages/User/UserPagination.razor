@@ -1,32 +1,41 @@
 ﻿@page "/user-pagination"
 @inject BiliUserService userService
+@attribute [Authorize]
 
-<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="Tuple<BiliUser, long>" AllowUnsorted="false">
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="Tuple<BiliUser, long>"
+          AllowUnsorted="false" SelectedItemsChanged=@SelectedItemsChanged MultiSelection="true" RowsPerPage=PageSize Dense=@Dense>
     <ToolBarContent>
         <MudText Typo="Typo.h6">用户列表</MudText>
         <MudSpacer />
         <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="用户名" Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
     </ToolBarContent>
+
     <ColGroup>
-        <col style="width:3rem;" />
-        <col style="width:10rem;" />
-        <col style="width:6rem" />
-        <col style="width:7rem" />
-        <col style="width:6rem;" />
-        <col />
-        <col />
-        <col />
+        @if (!MiniMode)
+        {
+            <col style="width:3rem;" />
+            <col style="width:10rem;" />
+            <col style="width:6rem" />
+            <col style="width:7rem" />
+            <col style="width:6rem;" />
+            <col />
+            <col />
+            <col />
+        }
     </ColGroup>
     <HeaderContent>
         <MudTh Style="text-align: center">头像</MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="Tuple<BiliUser, long>">用户名</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="level" T="Tuple<BiliUser, long>">等级</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center">会员</MudTh>
-        <MudTh Style="text-align: center">评论</MudTh>
-        <MudTh Style="text-align: center">挂件</MudTh>
-        <MudTh Style="text-align: center">大航海</MudTh>
-        <MudTh Style="text-align: center">签名</MudTh>
+        @if (!MiniMode)
+        {
+            <MudTh Style="text-align: center">会员</MudTh>
+            <MudTh Style="text-align: center">评论</MudTh>
+            <MudTh Style="text-align: center">挂件</MudTh>
+            <MudTh Style="text-align: center">大航海</MudTh>
+            <MudTh Style="text-align: center">签名</MudTh>
+        }
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="头像"><MudAvatar Image="@context.Item1.Avatar"></MudAvatar></MudTd>
@@ -36,21 +45,24 @@
             </MudLink>
         </MudTd>
         <MudTd DataLabel="等级">Lv.@context.Item1.Level</MudTd>
-        <MudTd DataLabel="会员">
-            @context.Item1.VipString
-        </MudTd>
-        <MudTd DataLabel="评论">
-            <MudButton Variant=@Variant.Text Target="_blank" Href=@($"/user/{context.Item1.UserId}")>
-                @context.Item2
-            </MudButton>
-        </MudTd>
-        <MudTd DataLabel="挂件">
-            @(string.Join(',', @context.Item1.Pendants))
-        </MudTd>
-        <MudTd DataLabel="大航海">@(string.Join(',', @context.Item1.Sailings.Select(x => x.Name)))</MudTd>
-        <MudTd DataLabel="签名">
-            @context.Item1.Sign
-        </MudTd>
+        @if (!MiniMode)
+        {
+            <MudTd DataLabel="会员">
+                @context.Item1.VipString
+            </MudTd>
+            <MudTd DataLabel="评论">
+                <MudButton Variant=@Variant.Text Target="_blank" Href=@($"/user/{context.Item1.UserId}")>
+                    @context.Item2
+                </MudButton>
+            </MudTd>
+            <MudTd DataLabel="挂件">
+                @(string.Join(',', @context.Item1.Pendants))
+            </MudTd>
+            <MudTd DataLabel="大航海">@(string.Join(',', @context.Item1.Sailings.Select(x => x.Name)))</MudTd>
+            <MudTd DataLabel="签名">
+                @context.Item1.Sign
+            </MudTd>
+        }
     </RowTemplate>
     <NoRecordsContent>
         <MudText>找不到相应用户信息</MudText>
@@ -74,6 +86,14 @@
     [Parameter]
     [SupplyParameterFromQuery(Name = "sort")]
     public string Sort { get; set; } = "";
+    [Parameter]
+    public EventCallback<List<BiliUser>> OnUsersSelected { get; set; }
+    [Parameter]
+    public bool MiniMode { get; set; } = false;
+    [Parameter]
+    public int PageSize { get; set; } = 10;
+    [Parameter]
+    public bool Dense { get; set; } = false;
 
     private MudTable<Tuple<BiliUser, long>> table = default!;
 
@@ -107,7 +127,7 @@
         );
 
         var item = new List<Tuple<BiliUser, long>>();
-        foreach(var user in response.Items)
+        foreach (var user in response.Items)
             item.Add(new Tuple<BiliUser, long>(user, await userService.GetUserReplyCount(user.UserId)));
 
         return new() { Items = item, TotalItems = response.MetaData.TotalCount };
@@ -117,5 +137,10 @@
     {
         usernameQuery = text;
         table.ReloadServerData();
+    }
+
+    private async Task SelectedItemsChanged(HashSet<Tuple<BiliUser, long>> users)
+    {
+        await OnUsersSelected.InvokeAsync(users.Select(x => x.Item1).ToList());
     }
 }

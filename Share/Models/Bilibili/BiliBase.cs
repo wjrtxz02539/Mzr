@@ -2,8 +2,8 @@
 
 namespace Mzr.Share.Models.Bilibili
 {
-    public class BiliBase
+    public class BiliBase : MongoDBBase
     {
-        public ObjectId Id { get; set; }
+        
     }
 }
