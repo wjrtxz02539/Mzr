@@ -9,6 +9,8 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">支配剧场-大图书馆</MudText>
         <MudSpacer />
+        <MudText Typo=@Typo.h6>问题反馈</MudText>
+        <MudIconButton Icon="fa-brands fa-github" Href="https://github.com/wjrtxz02539/Mzr/issues" Target="_blank"></MudIconButton>
         <AuthorizeView>
             <Authorized>
                 <MudText Typo="Typo.h6">@context.User.Identity?.Name</MudText>
