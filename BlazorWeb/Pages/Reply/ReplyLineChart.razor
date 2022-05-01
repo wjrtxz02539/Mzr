@@ -1,6 +1,8 @@
 ﻿@page "/reply-line-chart"
 @inject BiliReplyService replyService
 @inject BiliUserService userService
+@inject WebUserService webUserService
+@inject NavigationManager nav
 @inject IDialogService dialogService
 @attribute [Authorize]
 
@@ -30,8 +32,8 @@
     public bool ControllerEnabled { get; set; } = true;
     [Parameter]
     public ChartOptions ChartOptions { get; set; } = new()
-        {
-        };
+    {
+    };
     [Parameter]
     public string[]? XAxisLabels { get; set; } = null;
     [Parameter]
@@ -78,6 +80,8 @@
 
     private async Task LoadData()
     {
+        var watch = new Stopwatch();
+        watch.Start();
         if ((endTime - startTime) > TimeSpan.FromDays(31))
         {
             throw new ArgumentException("时间范围最大仅支持三十天");            
@@ -122,6 +126,19 @@
                 });
 
         StateHasChanged();
+
+        watch.Stop();
+        var parameters = new Dictionary<string, object?>()
+        {
+            {"threadIds", threadIds},
+            {"userIds", userIds},
+            {"upIds", upIds},
+            {"contentQuery", contentQuery},
+            {"startTime", startTime },
+            {"endTime", endTime}
+        };
+
+        await webUserService.Log("ReplyLineChart", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
     }
 
     private async Task<string> GetReplyQueryName(ReplyQuery query)

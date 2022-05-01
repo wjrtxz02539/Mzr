@@ -7,16 +7,18 @@ namespace BlazorWeb.Data
 {
     public class WebUserService
     {
-        public bool IsBanned => webUser?.Banned ?? true;
+        public bool IsBanned => webUser?.Banned ?? false;
 
         private readonly WebUserRepository webUserRepo;
         private WebUser? webUser;
         private ILogger logger;
+        private WebLogRepository logRepo;
 
-        public WebUserService(WebUserRepository webUserRepo, ILogger<WebUserService> logger)
+        public WebUserService(WebUserRepository webUserRepo, ILogger<WebUserService> logger, WebLogRepository logRepo)
         {
             this.webUserRepo = webUserRepo;
             this.logger = logger;
+            this.logRepo = logRepo;
         }
 
 
@@ -50,6 +52,27 @@ namespace BlazorWeb.Data
                 webUser.VisitCount++;
                 await webUserRepo.UpdateAsync(webUser);
             }
+        }
+
+        public async Task Log(string function, Dictionary<string, object?> parameters, string status, long elapsed = 0, 
+            string url = "", string error = "", string username = "")
+        {
+            if (string.IsNullOrEmpty(username))
+                username = webUser?.Username ?? string.Empty;
+
+            var log = new WebLog
+            {
+                Function = function,
+                Parameters = parameters,
+                Status = status,
+                Username = username,
+                Elasped = elapsed,
+                Url = url,
+                Error = error,
+                Time = DateTime.UtcNow,
+            };
+
+            await logRepo.InsertAsync(log);
         }
     }
 }

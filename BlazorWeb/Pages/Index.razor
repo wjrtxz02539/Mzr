@@ -3,8 +3,7 @@
 @layout ContainerLayout
 @inject StatusService status
 @inject WebConfiguration config
-@inject WebUserService webUserService
-@inject NavigationManager nav
+
 
 
 <PageTitle>支配剧场-大图书馆</PageTitle>
@@ -156,15 +155,5 @@
 </MudGrid>
 
 @code {
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthState { get; set; } = null!;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await webUserService.Init(AuthState.Result.User.Identity?.Name);
-        if (webUserService.IsBanned)
-        {
-            nav.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true);
-        }
-    }
+    
 }

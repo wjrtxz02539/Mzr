@@ -1,8 +1,10 @@
 ﻿@page "/reply-pagination"
 @inject BiliReplyService replyService
+@inject WebUserService webUserService
+@inject NavigationManager nav
 @attribute [Authorize]
 
-<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false" >
+<MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false">
     <ToolBarContent>
         <MudText Typo="Typo.h6">评论列表</MudText>
         <MudSpacer />
@@ -147,6 +149,9 @@
         loading = true;
         StateHasChanged();
 
+        var watch = new Stopwatch();
+        watch.Start();
+
         if (!string.IsNullOrEmpty(state.SortLabel))
         {
             sort = state.SortLabel;
@@ -168,6 +173,25 @@
             root: RootId,
             parent: ParentId
         );
+
+        watch.Stop();
+        var parameters = new Dictionary<string, object?>()
+        {
+            {"userId", UserId},
+            {"threadId", ThreadId},
+            {"upId", UpId},
+            {"dialogId", DialogId},
+            {"root", RootId},
+            {"parent", ParentId},
+            {"page", state.Page + 1},
+            {"size", state.PageSize},
+            {"sort", sort ?? string.Empty},
+            { "contentQuery", replyQuery },
+            {"startTime", startTime },
+            {"endTime", endTime}
+        };
+
+        await webUserService.Log("ReplyPagination", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
 
         return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
     }

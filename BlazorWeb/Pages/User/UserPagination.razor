@@ -1,5 +1,7 @@
 ﻿@page "/user-pagination"
 @inject BiliUserService userService
+@inject WebUserService webUserService
+@inject NavigationManager nav
 @attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="Tuple<BiliUser, long>"
@@ -112,6 +114,9 @@
         loading = true;
         StateHasChanged();
 
+        var watch = new Stopwatch();
+        watch.Start();
+
         if (!string.IsNullOrEmpty(state.SortLabel))
         {
             sort = state.SortLabel;
@@ -129,6 +134,17 @@
         var item = new List<Tuple<BiliUser, long>>();
         foreach (var user in response.Items)
             item.Add(new Tuple<BiliUser, long>(user, await userService.GetUserReplyCount(user.UserId)));
+
+        watch.Stop();
+        var parameters = new Dictionary<string, object?>()
+        {
+            {"usernameQuery", usernameQuery},
+            {"page", state.Page + 1 },
+            {"size", state.PageSize},
+            {"sort", sort}
+        };
+
+        await webUserService.Log("UserPagination", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
 
         return new() { Items = item, TotalItems = response.MetaData.TotalCount };
     }

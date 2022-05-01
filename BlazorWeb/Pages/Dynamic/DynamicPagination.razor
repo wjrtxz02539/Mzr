@@ -1,6 +1,8 @@
 ﻿@page "/dynamic-pagination"
 @inject BiliDynamicService dynamicService
 @inject BiliUserService userService
+@inject WebUserService webUserService
+@inject NavigationManager nav
 @attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliDynamic" AllowUnsorted="false">
@@ -110,6 +112,8 @@
         loading = true;
         StateHasChanged();
 
+        var watch = new Stopwatch();
+        watch.Start();
         if (!string.IsNullOrEmpty(state.SortLabel))
         {
             sort = state.SortLabel;
@@ -135,6 +139,20 @@
                 userDict.TryAdd(item.UserId, await userService.GetByUserId(item.UserId));
             recordDict.TryAdd(item.DynamicId, await dynamicService.GetLatestRunRecord(item.DynamicId));
         }
+
+        watch.Stop();
+        var parameters = new Dictionary<string, object?>()
+        {
+            {"userId", UserId},
+            {"page", state.Page + 1},
+            {"size", state.PageSize},
+            {"sort", sort ?? string.Empty},
+            { "descriptionQuery", descriptionQuery },
+            {"startTime", startTime },
+            {"endTime", endTime}
+        };
+
+        await webUserService.Log("DynamicPagination", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
 
         return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
     }

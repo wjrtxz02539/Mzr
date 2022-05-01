@@ -2,6 +2,8 @@
 @inject BiliDynamicService dynamicService
 @inject BiliUserService userService
 @inject IBiliReplyRepository replyRepo
+@inject WebUserService webUserService
+@inject NavigationManager nav
 @attribute [Authorize]
 
 <MudPaper Width=@PaperWidth Elevation=@PaperElevation>
@@ -53,6 +55,9 @@
 
     protected override async Task OnParametersSetAsync()
     {
+        var watch = new Stopwatch();
+        watch.Start();
+
         if (Dynamic != null)
             dynamic = Dynamic;
         else if (DynamicId.HasValue)
@@ -67,6 +72,14 @@
             user = await userService.GetByUserId(dynamic.UserId);
         }
 
+        watch.Stop();
+        var parameters = new Dictionary<string, object?>()
+        {
+            {"DynamicId", DynamicId},
+            {"ThreadId", ThreadId},
+        };
+
+        await webUserService.Log("DynamicCard", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
     }
 
 }
