@@ -2,7 +2,7 @@
 @inject BiliUserService userService
 @inject WebUserService webUserService
 @inject NavigationManager nav
-
+@attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="Tuple<BiliUser, long>"
           AllowUnsorted="false" SelectedItemsChanged=@SelectedItemsChanged MultiSelection="true" RowsPerPage=PageSize Dense=@Dense>

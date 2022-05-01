@@ -2,7 +2,7 @@
 @inject BiliReplyService replyService
 @inject WebUserService webUserService
 @inject NavigationManager nav
-
+@attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliReply" AllowUnsorted="false">
     <ToolBarContent>

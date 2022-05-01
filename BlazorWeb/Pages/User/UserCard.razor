@@ -3,43 +3,39 @@
 @inject IBiliReplyRepository replyRepo
 @inject WebUserService webUserService
 @inject NavigationManager nav
-
+@attribute [Authorize]
 
 <MudPaper Width="300px">
-    <MudCard>
-        <MudCardHeader>
-            <CardHeaderContent>
-                <MudGrid Spacing="0">
-                    <MudItem xs="10">
-                        <MudText Typo=@Typo.h5>@user?.Username</MudText>
-                    </MudItem>
-                    <MudItem xs="2">
-                        <MudText Align=@Align.End Typo=@Typo.subtitle1>Lv.@user?.Level</MudText>
-                    </MudItem>
-                    <MudItem xs="6">
-                        <MudText Typo=@Typo.subtitle1>@user?.UserId</MudText>
-                    </MudItem>
-                    <MudItem xs="2">
-                        <MudText Typo=@Typo.subtitle1>@user?.SexString</MudText>
-                    </MudItem>
-                    <MudItem xs="4">
-                        <MudText Align=@Align.End Typo=@Typo.subtitle1>@user?.VipString</MudText>
-                    </MudItem>
-                </MudGrid>
-            </CardHeaderContent>
-        </MudCardHeader>
-        <MudCardMedia Image=@user?.Avatar></MudCardMedia>
-        <MudCardContent>
-            <MudText Typo=@Typo.body2>@user?.Sign</MudText>
-            @if (@user?.Usernames != null && @user?.Usernames.Count > 1)
-            {
-                <MudText Typo=@Typo.subtitle1>曾用名：@(string.Join(',', @user.Usernames))</MudText>
-            }
-        </MudCardContent>
-        <MudCardActions>
-            <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/user/{user?.UserId}") Target="_blank">@(replyCount)条评论</MudButton>
-        </MudCardActions>
-    </MudCard>
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudGrid Spacing="0">
+                <MudItem xs="10">
+                    <MudText Typo=@Typo.h5>@user?.Username</MudText>
+                </MudItem>
+                <MudItem xs="2">
+                    <MudText Align=@Align.End Typo=@Typo.subtitle1>Lv.@user?.Level</MudText>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudText Typo=@Typo.subtitle1>@user?.UserId</MudText>
+                </MudItem>
+                <MudItem xs="2">
+                    <MudText Typo=@Typo.subtitle1>@user?.SexString</MudText>
+                </MudItem>
+                <MudItem xs="4">
+                    <MudText Align=@Align.End Typo=@Typo.subtitle1>@user?.VipString</MudText>
+                </MudItem>
+            </MudGrid>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardMedia Image=@user?.Avatar></MudCardMedia>
+    <MudCardContent>
+        <MudText Typo=@Typo.body2>@user?.Sign</MudText>
+    </MudCardContent>
+    <MudCardActions>
+        <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/user/{user?.UserId}") Target="_blank">@(replyCount)条评论</MudButton>
+    </MudCardActions>
+</MudCard>
 </MudPaper>
 @code {
     [Parameter]

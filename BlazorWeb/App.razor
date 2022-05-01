@@ -1,9 +1,13 @@
 ﻿@inject AuthenticationStateProvider authProvider
 
+<CascadingAuthenticationState>
     <Router AppAssembly="@typeof(App).Assembly">
         <Found Context="routeData">
-            <RouteView RouteData="@routeData" DefaultLayout="@typeof(ContainerLayout)" >
-            </RouteView>
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="layout" >
+                <NotAuthorized>
+                    <BlazorWeb.Pages.Guest></BlazorWeb.Pages.Guest>
+                </NotAuthorized>
+            </AuthorizeRouteView>
             <FocusOnNavigate RouteData="@routeData" Selector="h1" />
         </Found>
         <NotFound>
@@ -13,6 +17,7 @@
             </LayoutView>
         </NotFound>
     </Router>
+</CascadingAuthenticationState>
 
 
 @code{

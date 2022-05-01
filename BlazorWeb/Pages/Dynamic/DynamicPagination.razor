@@ -3,7 +3,7 @@
 @inject BiliUserService userService
 @inject WebUserService webUserService
 @inject NavigationManager nav
-
+@attribute [Authorize]
 
 <MudTable @ref="table" ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="BiliDynamic" AllowUnsorted="false">
     <ToolBarContent>
