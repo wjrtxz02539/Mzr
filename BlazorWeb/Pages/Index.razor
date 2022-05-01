@@ -66,7 +66,7 @@
             <MudList Clickable="true">
                 @foreach (var item in status.TopUsers)
                 {
-                    <MudListItem Href=@($"/user/{item.Item2}") Class="d-inline-flex align-center">
+                    <MudListItem Href=@($"/user/{item.Item2}?sort=-time") Class="d-inline-flex align-center">
                         <MudGrid>
                             <MudItem xs="9">
                                 <MudText Typo=@Typo.body1>
@@ -133,7 +133,7 @@
                 {
                     @foreach (var i in Enumerable.Range(0, status.DailyReplyTotalByUp.Item1.Count))
                     {
-                        <MudListItem Href=@($"/dynamic?userId={status.DailyReplyTotalByUp.Item1[i].UserId}") Class="d-inline-flex align-center">
+                        <MudListItem Href=@($"/dynamic?userId={status.DailyReplyTotalByUp.Item1[i].UserId}&sort=-time") Class="d-inline-flex align-center">
                             <MudGrid>
                                 <MudItem xs="9">
                                     <MudText Typo=@Typo.body1>
