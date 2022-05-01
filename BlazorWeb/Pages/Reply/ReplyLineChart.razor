@@ -18,8 +18,11 @@
         <MudItem xs="4">
 
         </MudItem>
-        <MudItem xs="6">
+        <MudItem xs="5">
             <MudDatePicker DateChanged=@DateChanged AutoClose="true" Label="查询时间"></MudDatePicker>
+        </MudItem>
+        <MudItem xs="1">
+            <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@(() => LoadData())>查询</MudButton>
         </MudItem>
     </MudGrid>
 }

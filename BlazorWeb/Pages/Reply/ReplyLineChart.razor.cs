@@ -65,16 +65,14 @@ namespace BlazorWeb.Pages.Reply
             }
         }
 
-        private async Task OnUsersSelected(List<BiliUser> users)
+        private void OnUsersSelected(List<BiliUser> users)
         {
             userIds = users.Select(x => x.UserId).ToList();
-            await LoadData();
         }
 
-        private async Task OnUpsSelected(List<BiliUser> users)
+        private void OnUpsSelected(List<BiliUser> users)
         {
             upIds = users.Select(x => x.UserId).ToList();
-            await LoadData();
         }
 
         private async Task LoadData()
@@ -188,7 +186,7 @@ namespace BlazorWeb.Pages.Reply
             }
         }
 
-        private async Task DateChanged(DateTime? date)
+        private void DateChanged(DateTime? date)
         {
             if (date == null)
                 return;
@@ -197,7 +195,6 @@ namespace BlazorWeb.Pages.Reply
             startTime = range.Item1;
             endTime = range.Item2;
 
-            await LoadData();
         }
 
         private void SelectUsers()

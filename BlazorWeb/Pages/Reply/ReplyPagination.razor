@@ -9,8 +9,9 @@
         <MudText Typo="Typo.h6">评论列表</MudText>
         <MudSpacer />
         <MudDateRangePicker Label=@dateQueryLabel Editable="true" DateRangeChanged=@DateRangeChanged DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss"></MudDateRangePicker>
-        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="评论内容" Adornment="Adornment.Start"
+        <MudTextField T="string" ValueChanged=@OnSearch Placeholder="评论内容" Adornment="Adornment.Start" Value=@replyQuery
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+        <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@OnQueryClick>查询</MudButton>
     </ToolBarContent>
     <ColGroup>
         <col style="width:3rem;" />
@@ -123,6 +124,13 @@
     private bool shouldStrictDate => !(ThreadId != null || ParentId != null || RootId != null || UserId != null || DialogId != null);
     private string dateQueryLabel => shouldStrictDate ? "时间段（最多7天）" : "时间段";
 
+    private void OnSearch(string text)
+    {
+        replyQuery = text;
+        loading = false;
+        StateHasChanged();
+    }
+
     private void StrictDateQuery()
     {
         if (!shouldStrictDate)
@@ -196,11 +204,6 @@
         return new() { Items = response.Items, TotalItems = response.MetaData.TotalCount };
     }
 
-    private void OnSearch(string text)
-    {
-        replyQuery = text;
-        table.ReloadServerData();
-    }
 
     private void DateRangeChanged(DateRange dateRange)
     {
@@ -215,7 +218,12 @@
             dateRange.End = DateTimeTools.SetLocalTimeZone(dateRange.End.Value);
             endTime = dateRange.End?.ToUniversalTime();
         }
+        loading = false;
+        StateHasChanged();
+    }
 
+    private void OnQueryClick(MouseEventArgs e)
+    {
         table.ReloadServerData();
     }
 }

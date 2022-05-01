@@ -9,8 +9,9 @@
     <ToolBarContent>
         <MudText Typo="Typo.h6">用户列表</MudText>
         <MudSpacer />
-        <MudTextField T="string" ValueChanged="@(s => OnSearch(s))" Placeholder="用户名" Adornment="Adornment.Start"
+        <MudTextField T="string" ValueChanged=@OnSearch Placeholder="用户名" Adornment="Adornment.Start" Value=@usernameQuery
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+        <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@OnQueryClick>查询</MudButton>
     </ToolBarContent>
 
     <ColGroup>
@@ -152,11 +153,17 @@
     private void OnSearch(string text)
     {
         usernameQuery = text;
-        table.ReloadServerData();
+        loading = false;
+        StateHasChanged();
     }
 
     private async Task SelectedItemsChanged(HashSet<Tuple<BiliUser, long>> users)
     {
         await OnUsersSelected.InvokeAsync(users.Select(x => x.Item1).ToList());
+    }
+
+    private void OnQueryClick(MouseEventArgs e)
+    {
+        table.ReloadServerData();
     }
 }
