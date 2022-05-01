@@ -22,5 +22,8 @@ namespace BlazorWeb.Models.Web
 
         [BsonElement("banned")]
         public bool Banned { get; set; } = false;
+
+        [BsonElement("query_count")]
+        public int QueryCount { get; set; } = 0;
     }
 }

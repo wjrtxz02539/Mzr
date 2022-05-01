@@ -43,6 +43,9 @@ namespace Mzr.Share.Repositories
             }
         }
 
+        public FilterDefinitionBuilder<T> Filter => Builders<T>.Filter;
+        public UpdateDefinitionBuilder<T> Update => Builders<T>.Update;
+
         public MongoDBRepository(IMongoDatabase mongoDatabase, ILogger logger, string collectionName, List<CreateIndexModel<T>>? createIndexModels = null)
         {
             CollectionName = collectionName;

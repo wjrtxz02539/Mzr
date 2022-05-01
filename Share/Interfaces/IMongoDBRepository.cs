@@ -12,6 +12,9 @@ namespace Mzr.Share.Interfaces
     public interface IMongoDBRepository<T> : IDisposable where T : MongoDBBase
     {
         IMongoCollection<T> Collection { get; }
+
+        FilterDefinitionBuilder<T> Filter { get; }
+        UpdateDefinitionBuilder<T> Update { get; }
         Task InsertAsync(T entity);
 
         Task UpdateAsync(T entity);

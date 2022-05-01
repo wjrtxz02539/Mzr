@@ -47,6 +47,9 @@ namespace Mzr.Share.Repositories.Bilibili
             }
         }
 
+        public FilterDefinitionBuilder<T> Filter => Builders<T>.Filter;
+        public UpdateDefinitionBuilder<T> Update => Builders<T>.Update;
+
         public BiliRepository(IMongoDatabase mongoDatabase, ILogger logger, string collectionName, List<CreateIndexModel<T>>? createIndexModels = null)
         {
             CollectionName = collectionName;

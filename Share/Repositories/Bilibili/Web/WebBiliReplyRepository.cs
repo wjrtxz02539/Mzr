@@ -143,6 +143,12 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 logger.LogInformation("{logPrefix} Skip beacuse no new comments.", logPrefix);
                 yield break;
             }
+            else
+            {
+                dynamic.UpdatedTime = DateTime.UtcNow;
+                dynamic.Reply = cursor.Count;
+                await dynamicRepo.UpdateAsync(dynamic);
+            }
 
             logger.LogDebug("{logPrefix} Start running.", logPrefix);
 

@@ -76,6 +76,8 @@ namespace BlazorWeb.Data
             };
 
             await logRepo.InsertAsync(log);
+            if (webUser != null)
+                await webUserRepo.Collection.UpdateOneAsync(f => f.Id == webUser.Id, webUserRepo.Update.Inc(f => f.QueryCount, 1));
         }
     }
 }
