@@ -10,6 +10,7 @@
         // Reply increase daily per up
         public List<ChartSeries> DailyReplyStatusByUp = new();
         public Tuple<List<BiliUser>, List<double>> DailyReplyTotalByUp = new(new(), new());
+        public Tuple<List<BiliUser>, List<double>> MonthlyReplyTotalByUp = new(new(), new());
 
         // Running Dynamic
         public List<BiliDynamic> RunningDynamics = new();

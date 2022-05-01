@@ -1,0 +1,56 @@
+﻿@inject BiliUserService userService
+
+<MudDialog Style="width: 1000px">
+    <DialogContent>
+        <MudTable Items=@items Hover="true" SelectedItemsChanged=@SelectedItemsChanged MultiSelection="true" T=@BiliUser>
+            <HeaderContent>
+                <MudTh Style="text-align: center">头像</MudTh>
+                <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="@BiliUser">用户名</MudTableSortLabel></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="头像"><MudAvatar Image="@context.Avatar"></MudAvatar></MudTd>
+                <MudTd DataLabel="用户名">
+                    <MudLink Href=@($"/user/{@context.UserId}") Target="_blank">
+                        @context.Username
+                    </MudLink>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">取消</MudButton>
+        <MudButton Color="@Color.Success" Variant="Variant.Filled" OnClick="Submit">完成</MudButton>
+    </DialogActions>
+</MudDialog>
+@code {
+    [CascadingParameter]
+    MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public EventCallback<List<BiliUser>> UpsSelected { get; set; }
+
+    private List<BiliUser> items = new();
+    private HashSet<BiliUser> selected = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        items = await userService.GetUpList();
+    }
+
+    private async Task Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(true));
+        await UpsSelected.InvokeAsync(selected.ToList());
+    }
+
+    private void SelectedItemsChanged(HashSet<BiliUser> users)
+    {
+        selected = users;
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+}

@@ -1,4 +1,5 @@
-﻿using BlazorWeb.Models.Web;
+﻿using BlazorWeb.Models.Configurations;
+using BlazorWeb.Models.Web;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using Mzr.Share.Interfaces.Bilibili;
@@ -10,11 +11,13 @@ namespace BlazorWeb.Data
     {
         private readonly IBiliUserRepository userRepo;
         private readonly IBiliReplyRepository replyRepo;
+        private readonly WebConfiguration config;
 
-        public BiliUserService(IBiliUserRepository userRepo, IBiliReplyRepository replyRepo)
+        public BiliUserService(IBiliUserRepository userRepo, IBiliReplyRepository replyRepo, WebConfiguration webConfiguration)
         {
             this.userRepo = userRepo;
             this.replyRepo = replyRepo;
+            config = webConfiguration;
         }
 
         public async Task<PagingResponse<BiliUser>> PaginationAsync(int page = 1, int size = 10, string? sort = null,
@@ -54,6 +57,18 @@ namespace BlazorWeb.Data
         public async Task<long> GetUserReplyCount(long userId)
         {
             return await replyRepo.Collection.CountDocumentsAsync(f => f.UserId == userId);
+        }
+
+        public async Task<List<BiliUser>> GetUpList()
+        {
+            var result = new List<BiliUser>();
+            foreach (var userId in config.MonitorUserIds)
+            {
+                var user = await GetByUserId(userId);
+                if (user != null)
+                    result.Add(user);
+            }
+            return result;
         }
     }
 }

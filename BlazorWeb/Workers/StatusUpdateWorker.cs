@@ -34,13 +34,13 @@ namespace BlazorWeb.Workers
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var task = new Task(async () => await Refresh(stoppingToken));
+            var task = new Task(async () => await RefreshDailyStatus(stoppingToken));
             task.Start();
 
             await task.WaitAsync(stoppingToken);
         }
 
-        private async Task Refresh(CancellationToken cancellationToken)
+        private async Task RefreshDailyStatus(CancellationToken cancellationToken)
         {
             var stopWatch = new Stopwatch();
             while (!cancellationToken.IsCancellationRequested)
@@ -129,5 +129,6 @@ namespace BlazorWeb.Workers
             }
 
         }
+
     }
 }
