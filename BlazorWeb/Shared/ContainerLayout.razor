@@ -1,6 +1,4 @@
-﻿@inherits LayoutComponentBase
-@inject WebUserService webUserService
-@inject NavigationManager nav
+﻿@inherits MainLayout
 
 <MudThemeProvider />
 <MudDialogProvider />
@@ -37,17 +35,5 @@
     void DrawerToggle()
     {
         _drawerOpen = !_drawerOpen;
-    }
-
-    [CascadingParameter]
-    protected Task<AuthenticationState> AuthState { get; set; } = null!;
-
-    protected override async Task OnInitializedAsync()
-    {
-        await webUserService.Init(AuthState.Result.User.Identity?.Name);
-        if (webUserService.IsBanned)
-        {
-            nav.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true);
-        }
     }
 }

@@ -24,6 +24,9 @@ namespace BlazorWeb.Data
 
         public async Task Init(string? username)
         {
+            if (webUser != null)
+                return;
+
             if (username == null)
             {
                 logger.LogWarning("username is null.");
