@@ -11,16 +11,6 @@
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
         <MudText Typo="Typo.h5" Class="ml-3">支配剧场-大图书馆</MudText>
         <MudSpacer />
-        <AuthorizeView>
-            <Authorized>
-                <MudText Typo="Typo.h6">@context.User.Identity?.Name</MudText>
-                <MudIconButton Icon="@Icons.Filled.Logout" Color="Color.Inherit" Edge="Edge.End" Href="MicrosoftIdentity/Account/SignOut"/>
-            </Authorized>
-            <NotAuthorized>
-                <MudText Typo="Typo.h6">请登录</MudText>
-                <MudIconButton Icon="@Icons.Filled.Login" Color="Color.Inherit" Edge="Edge.End" Href="MicrosoftIdentity/Account/SignIn"/>
-            </NotAuthorized>
-        </AuthorizeView>
     </MudAppBar>
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <NavMenu />
@@ -39,6 +29,7 @@
         _drawerOpen = !_drawerOpen;
     }
 
+   /* 
     [CascadingParameter]
     protected Task<AuthenticationState> AuthState { get; set; } = null!;
 
@@ -50,4 +41,5 @@
             nav.NavigateTo("MicrosoftIdentity/Account/SignOut", forceLoad: true);
         }
     }
+    */
 }

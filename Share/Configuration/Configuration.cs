@@ -13,6 +13,8 @@ namespace Mzr.Share.Configuration
         public SelfProxyConfiguration SelfProxy { get; set; }
         public KDLProxyConfiguration KDLProxy { get; set; } = new();
 
+        public Configuration()
+        { }
         public Configuration(IConfiguration configuration)
         {
             Database = configuration.GetRequiredSection("Database").Get<DatabaseConfiguration>();

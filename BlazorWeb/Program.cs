@@ -13,6 +13,7 @@ using BlazorWeb.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 // Auth relate
+/*
 builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
     .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 builder.Services.AddControllersWithViews()
@@ -21,12 +22,14 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddAuthorization(options =>
 {
 });
+*/
 
 // Add services to the container.
 builder.Services.AddRazorPages(options =>
 {
 });
-builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
+//builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
+builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 
 builder.Logging.AddSimpleConsole(options =>
@@ -78,8 +81,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-app.UseAuthorization();
+//app.UseAuthentication();
+//app.UseAuthorization();
 
 app.MapControllers();
 app.MapBlazorHub();

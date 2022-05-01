@@ -1,6 +1,6 @@
 ﻿@page "/user-select"
 @inject BiliUserService userService
-@attribute [Authorize]
+
 
 <MudTextField @bind-Value=@usernameQuery  DebounceInterval="500" T=@string OnDebounceIntervalElapsed=@ValueChanged></MudTextField>
 
