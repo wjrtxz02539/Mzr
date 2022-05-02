@@ -161,17 +161,25 @@ namespace Mzr.Service.Crawler.Worker
                     logger.LogInformation("{logPrefix} Stop.", logPrefix);
                 });
 
-            do
+            try
             {
-                if (!Running)
-                {
-                    dynamicBlock.Post(configuration.UserId);
-                    if (!configuration.Repeat)
-                        break;
-                }
 
-                await Task.Delay(TimeSpan.FromMinutes(configuration.RestartMinutes), cancellationToken: stoppingToken);
-            } while (!stoppingToken.IsCancellationRequested);
+                do
+                {
+                    if (!Running)
+                    {
+                        dynamicBlock.Post(configuration.UserId);
+                        if (!configuration.Repeat)
+                            break;
+                    }
+
+                    await Task.Delay(TimeSpan.FromMinutes(configuration.RestartMinutes), cancellationToken: stoppingToken);
+                } while (!stoppingToken.IsCancellationRequested);
+            }
+            catch(TaskCanceledException)
+            {
+                return;
+            }
         }
     }
 }
