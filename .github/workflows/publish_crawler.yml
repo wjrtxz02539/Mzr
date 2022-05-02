@@ -3,7 +3,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Create and publish Crawler image
+name: Publish Crawler image
 
 on:
   push:
