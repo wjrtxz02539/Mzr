@@ -3,15 +3,18 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Create and publish a Docker image
+name: Create and publish Crawler image
 
 on:
   push:
     branches: ['master']
+    paths: 
+      - 'Share/**'
+      - 'Crawler/**'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: wjrtxz02539/mzr-crawler
 
 jobs:
   build-and-push-image:
