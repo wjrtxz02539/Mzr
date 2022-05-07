@@ -9,6 +9,9 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Blazorise.Charts" Version="1.0.4" />
+		<PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.0.4" />
+		<PackageReference Include="Blazorise.Material" Version="1.0.4" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="6.0.4" />
 		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.14.0" />
 		<PackageReference Include="MongoDB.Driver" Version="2.15.0" />

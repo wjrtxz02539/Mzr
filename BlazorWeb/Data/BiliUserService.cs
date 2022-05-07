@@ -32,6 +32,8 @@ namespace BlazorWeb.Data
                 "-username" => sortBuilder.Descending(f => f.Username),
                 "level" => sortBuilder.Ascending(f => f.Level),
                 "-level" => sortBuilder.Descending(f => f.Level),
+                "-_id" => sortBuilder.Descending(f => f.Id),
+                "_id" => sortBuilder.Ascending(f => f.Id),
                 _ => new BsonDocument(),
             };
             var filterBuilder = Builders<BiliUser>.Filter;

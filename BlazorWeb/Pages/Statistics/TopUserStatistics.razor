@@ -1,0 +1,20 @@
+﻿<MudList Clickable="false">
+    @foreach (var item in items)
+    {
+        <MudListItem Class="d-inline-flex align-center">
+            <MudGrid>
+                <MudItem xs="9">
+                    <MudText Typo=@Typo.body1>
+                        @(item.Item3?.Username ?? item.Item2.ToString())
+                    </MudText>
+                </MudItem>
+                <MudItem xs="3">
+                    <MudButton Variant=@Variant.Outlined Color=@Color.Primary Href=@($"/user/{item.Item2}?sort=-time") Target="_blank">
+                        @(item.Item1)
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudListItem>
+    }
+</MudList>
+

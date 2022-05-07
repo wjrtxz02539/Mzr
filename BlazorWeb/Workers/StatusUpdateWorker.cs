@@ -1,5 +1,6 @@
 ﻿using BlazorWeb.Data;
 using BlazorWeb.Models.Configurations;
+using BlazorWeb.Models.Chart;
 using BlazorWeb.Utils;
 using MongoDB.Bson;
 using MongoDB.Driver;
@@ -8,6 +9,8 @@ using MudBlazor;
 using Mzr.Share.Interfaces.Bilibili;
 using Mzr.Share.Models.Bilibili;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Features;
+using Blazorise;
 
 namespace BlazorWeb.Workers
 {
@@ -45,7 +48,7 @@ namespace BlazorWeb.Workers
             var stopWatch = new Stopwatch();
             while (!cancellationToken.IsCancellationRequested)
             {
-                var dateRange = DateTimeTools.GetSpecificWholeDayRangeUtc(DateTime.Now);
+                var dateRange = DateTimeTools.Get24HDateRangeUtc();
 
                 using (var scope = serviceProvider.CreateAsyncScope())
                 {
@@ -54,31 +57,21 @@ namespace BlazorWeb.Workers
                     var dynamicService = scope.ServiceProvider.GetRequiredService<BiliDynamicService>();
 
                     stopWatch.Restart();
-                    statusService.DailyReplyStatus = new List<ChartSeries>() {
-                    new ChartSeries()
-                    {
-                        Name = "评论数",
-                        Data = await replyService.HourlyAggregateAsync(startTime: dateRange.Item1, endTime: dateRange.Item2)
-                    }}
-                    ;
+                    statusService.DailyReplyLineChart = new(dateRange.Item1, dateRange.Item2);
+                    statusService.DailyReplyLineChart.AddDataSet(new(await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2), "评论总数"));
 
-                    statusService.DailyReplyStatusByUp.Clear();
+                    statusService.DailyReplyLineChartByUp = new(dateRange.Item1, dateRange.Item2);
                     statusService.MonitoredUp.Clear();
                     statusService.DailyReplyTotalByUp.Item1.Clear();
                     statusService.DailyReplyTotalByUp.Item2.Clear();
                     var totalByUp = new List<Tuple<long, BiliUser>>();
                     foreach (var upId in webConfiguration.MonitorUserIds)
                     {
-                        var status = await replyService.HourlyAggregateAsync(startTime: dateRange.Item1, endTime: dateRange.Item2, upId: upId);
                         var up = await userService.GetByUserId(upId);
 
-                        var series = new ChartSeries()
-                        {
-                            Name = up?.Username ?? upId.ToString(),
-                            Data = status
-                        };
-
-                        statusService.DailyReplyStatusByUp.Add(series);
+                        statusService.DailyReplyLineChartByUp.AddDataSet(new(
+                            data: await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2, upId: upId),
+                            label: up?.Username ?? upId.ToString()));
                         if (up != null)
                         {
                             statusService.MonitoredUp.Add(up.UserId, up);
@@ -121,6 +114,13 @@ namespace BlazorWeb.Workers
 
                     statusService.TodayReplyCount = await replyRepo.Collection.CountDocumentsAsync(f => f.Time >= dateRange.Item1 && f.Time <= dateRange.Item2, cancellationToken: cancellationToken);
                     statusService.TotalReplyCount = await replyRepo.Collection.EstimatedDocumentCountAsync(cancellationToken: cancellationToken);
+
+                    var monthlyStartTime = DateTime.UtcNow.AddDays(-30);
+                    var monthlyEndTime = DateTime.UtcNow;
+                    statusService.MonthlyReplyLineChart = new(monthlyStartTime, monthlyEndTime);
+                    statusService.MonthlyReplyLineChart.AddDataSet(new(
+                        data: await replyService.TimeGroupAsync(startTime: monthlyStartTime, endTime: monthlyEndTime),
+                        label: "评论总数"));
 
                     stopWatch.Stop();
                     logger.LogInformation("Update completed, using {ms} ms.", stopWatch.ElapsedMilliseconds);

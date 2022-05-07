@@ -1,4 +1,5 @@
-﻿using BlazorWeb.Models.Web;
+﻿using BlazorWeb.Models.Chart;
+using BlazorWeb.Models.Web;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -20,7 +21,7 @@ namespace BlazorWeb.Data
             this.dynamicRepo = dynamicRepo;
         }
 
-        public FilterDefinition<BiliReply> FilterBuilder(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null, 
+        public FilterDefinition<BiliReply> FilterBuilder(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null)
         {
             var filterBuilder = Builders<BiliReply>.Filter;
@@ -46,7 +47,7 @@ namespace BlazorWeb.Data
             return filter;
         }
 
-        public async Task<List<Tuple<int, long, BiliUser?>>> GetTopUsersAsync(DateTime startTime, DateTime endTime, long? upId = null,
+        public async Task<List<Tuple<int, long, BiliUser?>>> GetTopUsersAsync(DateTime? startTime = null, DateTime? endTime = null, long? upId = null,
             long? threadId = null, int limit = 10, CancellationToken cancellationToken = default)
         {
             var builder = Builders<BiliReply>.Filter;
@@ -83,11 +84,11 @@ namespace BlazorWeb.Data
             return result;
         }
 
-        public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null, 
-            int page = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, 
+        public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
+            int page = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
             long? root = null, long? parent = null)
         {
-            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId, 
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
                 contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
 
             var builder = Builders<BiliReply>.Sort;
@@ -108,25 +109,29 @@ namespace BlazorWeb.Data
             return new PagingResponse<BiliReply>(result, totalCount: totalCount, pageSize: size, currentPage: page);
         }
 
-        public async Task<double[]> HourlyAggregateAsync(long? userId = null, long? threadId = null, long? upId = null, string? contentQuery = null,
-            DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
+        public async Task<List<TimeLineValue>> TimeGroupAsync(long? userId = null, long? threadId = null, long? upId = null,
+            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
         {
             var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, contentQuery: contentQuery, startTime: startTime, endTime: endTime);
 
             PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
             {
                 new BsonDocument("$match", filter.Render(replyRepo.Collection.DocumentSerializer, replyRepo.Collection.Settings.SerializerRegistry)),
-                BsonDocument.Parse("{$project: {hour: { $hour: {date: \"$time\", timezone: \"Asia/Shanghai\"} }}}"),
-                BsonDocument.Parse("{$group: {_id: \"$hour\", count: {$sum: 1}}}")
+                BsonDocument.Parse("{$project: {year: {$year: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, month: {$month: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, day: {$dayOfMonth: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, hour: { $hour: {date: \"$time\", timezone: \"Asia/Shanghai\"}} }}"),
+                BsonDocument.Parse("{$group: {_id: {year: \"$year\", month: \"$month\", day: \"$day\", hour: \"$hour\"}, count: {$sum: 1}}}"),
+                BsonDocument.Parse("{$project: {_id: 0, count: 1, time: {$dateFromParts: {year: \"$_id.year\", month: \"$_id.month\", day: \"$_id.day\", hour: \"$_id.hour\", timezone: \"Asia/Shanghai\"}}}}"),
+                BsonDocument.Parse("{$sort: {\"time\": 1}}")
             };
 
-            var response = await replyRepo.Collection.Aggregate(pipeline, cancellationToken: cancellationToken).ToListAsync(cancellationToken);
-
-            var result = new double[24];
-            foreach(var item in response)
+            var result = new List<TimeLineValue>();
+            await replyRepo.Collection.Aggregate(pipeline, cancellationToken: cancellationToken).ForEachAsync(item =>
             {
-                result[item["_id"].AsInt32] = (double)item["count"].AsInt32;
-            }
+                result.Add(new()
+                {
+                    UtcTime = item["time"].ToUniversalTime(),
+                    Count = item["count"].AsInt32
+                });
+            }, cancellationToken: cancellationToken);
 
             return result;
         }

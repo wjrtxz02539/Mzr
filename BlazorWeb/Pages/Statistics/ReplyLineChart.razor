@@ -1,0 +1,28 @@
+﻿@inject BiliReplyService replyService
+@inject WebUserService webUserService
+@inject BiliUserService userService
+@inject NavigationManager nav
+@attribute [Authorize]
+
+<MudGrid>
+    @if (ControlEnabled)
+    {
+        <MudItem xs="12">
+            <MudGrid>
+                <MudItem xs="6">
+                    <MudTextField T="string" Placeholder="评论内容" Adornment="Adornment.Start" Value=@contentQuery @ref=@textField
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                </MudItem>
+                <MudItem xs="5">
+                    <MudDateRangePicker DateRange=@DateRangeValue @ref=@dateRangePicker Label="查询时间" />
+                </MudItem>
+                <MudItem xs="1">
+                    <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@OnQueryClick>查询</MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudItem>
+    }
+    <MudItem xs="12">
+        <LineChartV1 ChartDefinition=@chartDefinition @ref=@lineChart />
+    </MudItem>
+</MudGrid>

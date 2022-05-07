@@ -1,0 +1,8 @@
+﻿@using Blazorise.Charts
+
+@if (!string.IsNullOrEmpty(Title))
+{
+    <MudText Typo=@Typo.h6 Align=@Align.Center>@Title</MudText>
+}
+<LineChart @ref="lineChart" TItem="double" />
+

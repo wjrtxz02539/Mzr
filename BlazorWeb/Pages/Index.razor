@@ -14,7 +14,7 @@
             <MudCardContent Class="d-inline justify-center">
                 <MudIcon Icon=@Icons.Filled.Newspaper Color=@Color.Primary Size=@Size.Large></MudIcon>
                 <MudText Typo=@Typo.h4 Align=@Align.Center>
-                    今日动态 @status.TodayDynamics.Count
+                    24小时动态 @status.TodayDynamics.Count
                 </MudText>
             </MudCardContent>
         </MudCard>
@@ -34,7 +34,7 @@
             <MudCardContent Class="d-inline justify-center">
                 <MudIcon Icon=@Icons.Filled.AddComment Color=@Color.Success Size=@Size.Large></MudIcon>
                 <MudText Typo=@Typo.h4 Align=@Align.Center>
-                    今日评论 @status.TodayReplyCount
+                    24小时评论 @status.TodayReplyCount
                 </MudText>
             </MudCardContent>
         </MudCard>
@@ -58,7 +58,7 @@
                         <MudIcon Icon=@Icons.Filled.SupervisedUserCircle Color=@Color.Tertiary Size=@Size.Large></MudIcon>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudText Typo=@Typo.h6 Class="pt-1">今日最多评论</MudText>
+                        <MudText Typo=@Typo.h6 Class="pt-1">24小时最多评论</MudText>
                     </MudItem>
                     <MudItem xs="2"></MudItem>
                 </MudGrid>
@@ -92,28 +92,14 @@
                     <MudIcon Icon=@Icons.Filled.PieChart Color=@Color.Warning Size=@Size.Large></MudIcon>
                 </MudItem>
                 <MudItem xs="6">
-                    <MudText Typo=@Typo.h6 Class="pt-1">今日评论分布</MudText>
+                    <MudText Typo=@Typo.h6 Class="pt-1">24小时评论分布</MudText>
                 </MudItem>
                 <MudItem xs="2"></MudItem>
             </MudGrid>
             <MudChart ChartType=@ChartType.Pie InputData=@status.DailyReplyTotalByUp.Item2.ToArray() InputLabels=@status.DailyReplyTotalByUp.Item1.Select(x => x.Username).ToArray()></MudChart>
         </MudPaper>
     </MudItem>
-    <MudItem xs="6">
-        <MudPaper Class="align-center justify-center mud-width-full py-4" Elevation="25">
-            <MudGrid Class="d-inline-flex justify-space-around">
-                <MudItem xs="3"></MudItem>
-                <MudItem xs="1">
-                    <MudIcon Icon=@Icons.Filled.ShowChart Color=@Color.Warning Size=@Size.Large></MudIcon>
-                </MudItem>
-                <MudItem xs="8">
-                    <MudText Typo=@Typo.h6 Class="pt-1">今日评论趋势</MudText>
-                </MudItem>
-                <MudItem xs="2"></MudItem>
-            </MudGrid>
-            <ReplyLineChart Series=@status.DailyReplyStatus ControllerEnabled="false" ChartWidth=800 ChartHeight=393></ReplyLineChart>
-        </MudPaper>
-    </MudItem>
+
     <MudItem xs="3">
         <MudPaper Elevation="25">
             <MudPaper Elevation="0">
@@ -123,7 +109,7 @@
                         <MudIcon Icon=@Icons.Filled.Lightbulb Color=@Color.Tertiary Size=@Size.Large></MudIcon>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudText Typo=@Typo.h6 Class="pt-1">今日UP数据</MudText>
+                        <MudText Typo=@Typo.h6 Class="pt-1">24小时UP数据</MudText>
                     </MudItem>
                     <MudItem xs="2"></MudItem>
                 </MudGrid>
@@ -152,8 +138,18 @@
             </MudList>
         </MudPaper>
     </MudItem>
+    <MudItem xs="12">
+        <MudPaper Class="align-center justify-center mud-width-full py-4" Elevation="25">
+            <LineChartV1 ChartDefinition=@status.DailyReplyLineChartByUp Title="24小时评论趋势"></LineChartV1>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12">
+        <MudPaper Elevation="25">
+            <LineChartV1 ChartDefinition=@status.MonthlyReplyLineChart Title="近一月评论趋势"></LineChartV1>
+        </MudPaper>
+    </MudItem>
 </MudGrid>
 
 @code {
-    
+
 }

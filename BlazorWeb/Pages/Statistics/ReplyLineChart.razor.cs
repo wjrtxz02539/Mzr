@@ -1,11 +1,13 @@
-﻿using BlazorWeb.Pages.User;
+﻿using BlazorWeb.Models.Chart;
+using BlazorWeb.Pages.User;
 using BlazorWeb.Utils;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 using Mzr.Share.Models.Bilibili;
 using System.Diagnostics;
 
-namespace BlazorWeb.Pages.Reply
+namespace BlazorWeb.Pages.Statistics
 {
     public partial class ReplyLineChart
     {
@@ -18,32 +20,25 @@ namespace BlazorWeb.Pages.Reply
         [Parameter]
         public string? ContentQuery { get; set; } = null;
         [Parameter]
+        public DateTime? StartTime { get; set; } = null;
+        [Parameter]
         public DateTime? EndTime { get; set; } = null;
         [Parameter]
-        public List<ChartSeries> Series { get; set; } = new();
+        public bool ControlEnabled { get; set; } = false;
         [Parameter]
-        public bool ControllerEnabled { get; set; } = true;
-        [Parameter]
-        public ChartOptions ChartOptions { get; set; } = new()
-        {
-        };
-        [Parameter]
-        public string[]? XAxisLabels { get; set; } = null;
-        [Parameter]
-        public ChartType ChartType { get; set; } = ChartType.Line;
-        [Parameter]
-        public string ChartWidth { get; set; } = "80%";
-        [Parameter]
-        public string ChartHeight { get; set; } = "80%";
+        public string? Title { get; set; } = null;
 
         private List<long> threadIds = new();
         private List<long> userIds = new();
         private List<long> upIds = new();
         private string? contentQuery = null;
-        private DateTime? startTime = null;
-        private DateTime? endTime = null;
-        private List<ChartSeries> series = null!;
-        private string[] xAxisLabels = null!;
+        private DateTime startTime;
+        private DateTime endTime;
+        private DateRange DateRangeValue => new(startTime.ToLocalTime(), endTime.ToLocalTime());
+        private MudDateRangePicker dateRangePicker = null!;
+        private MudTextField<string> textField = null!;
+        private TimeLineDefinition? chartDefinition = null;
+        private LineChartV1? lineChart = null;
 
         protected override async Task OnInitializedAsync()
         {
@@ -52,38 +47,54 @@ namespace BlazorWeb.Pages.Reply
             upIds = UpIds;
             contentQuery = ContentQuery;
 
-            var dateRange = DateTimeTools.GetSpecificWholeDayRangeUtc(EndTime ?? DateTime.Now);
-            startTime = dateRange.Item1;
-            endTime = dateRange.Item2;
-            series = Series;
-            xAxisLabels = XAxisLabels ?? Enumerable.Range(0, 24).Select(x => x.ToString()).ToArray();
+            SetTimeQuery(StartTime, EndTime);
 
+            await LoadData();
+        }
 
-            if (series.Count == 0)
+        private void SetTimeQuery(DateTime? start, DateTime? end)
+        {
+            if (start == null && end == null)
             {
-                await LoadData();
+                endTime = DateTime.UtcNow;
+                startTime = DateTime.UtcNow.AddDays(-30);
+            }
+            else if (start != null && end != null)
+            {
+                startTime = start.Value;
+                endTime = end.Value;
+                if ((endTime - startTime).TotalDays > 31)
+                {
+                    startTime = endTime.AddDays(-30);
+                }
+            }
+            else if (start != null)
+            {
+                endTime = start.Value.AddDays(30);
+                startTime = start.Value;
+            }
+            else if (end != null)
+            {
+                startTime = end.Value.AddDays(-30);
+                endTime = end.Value;
             }
         }
 
-        private void OnUsersSelected(List<BiliUser> users)
+        private async Task OnQueryClick(MouseEventArgs e)
         {
-            userIds = users.Select(x => x.UserId).ToList();
-        }
-
-        private void OnUpsSelected(List<BiliUser> users)
-        {
-            upIds = users.Select(x => x.UserId).ToList();
+            SetTimeQuery(dateRangePicker.DateRange.Start, dateRangePicker.DateRange.End);
+            contentQuery = string.IsNullOrEmpty(textField.Value) ? null : textField.Value;
+            await LoadData();
+            if (lineChart != null)
+                await lineChart.Draw();
         }
 
         private async Task LoadData()
         {
             var watch = new Stopwatch();
             watch.Start();
-            if ((endTime - startTime) > TimeSpan.FromDays(31))
-            {
-                throw new ArgumentException("时间范围最大仅支持三十天");
-            }
 
+            chartDefinition = new TimeLineDefinition(startTime: startTime, endTime: endTime);
             var queryList = new List<ReplyQuery>();
             if (threadIds?.Count > 0)
                 AddParametersToDict("ThreadId", threadIds.Select(x => (object)x).ToArray(), ref queryList);
@@ -96,44 +107,33 @@ namespace BlazorWeb.Pages.Reply
                 foreach (var query in queryList)
                     query.ContentQuery = contentQuery;
 
-            series.Clear();
-
             foreach (var query in queryList)
             {
-                var item = new ChartSeries()
-                {
-                    Name = await GetReplyQueryName(query),
-                    Data = await replyService.HourlyAggregateAsync(
-                                            userId: query.UserId,
+                var dataSet = new TimeLineDataSet(
+                    data: await replyService.TimeGroupAsync(userId: query.UserId,
                                             threadId: query.ThreadId,
                                             upId: query.UpId,
                                             contentQuery: query.ContentQuery,
                                             startTime: startTime,
-                                            endTime: endTime
-                                        )
-                };
-                series.Add(item);
+                                            endTime: endTime),
+                    label: await GetReplyQueryName(query));
+                chartDefinition.AddDataSet(dataSet);
             }
 
             if (queryList.Count == 0)
-                series.Add(new()
-                {
-                    Name = "评论数",
-                    Data = await replyService.HourlyAggregateAsync(startTime: startTime, endTime: endTime)
-                });
-
+                chartDefinition.AddDataSet(new(data: await replyService.TimeGroupAsync(startTime: startTime, endTime: endTime), label: "评论数"));
             StateHasChanged();
 
             watch.Stop();
             var parameters = new Dictionary<string, object?>()
-        {
-            {"threadIds", threadIds},
-            {"userIds", userIds},
-            {"upIds", upIds},
-            {"contentQuery", contentQuery},
-            {"startTime", startTime },
-            {"endTime", endTime}
-        };
+            {
+                {"threadIds", threadIds},
+                {"userIds", userIds},
+                {"upIds", upIds},
+                {"contentQuery", contentQuery},
+                {"startTime", startTime },
+                {"endTime", endTime}
+            };
 
             await webUserService.Log("ReplyLineChart", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
         }
@@ -163,7 +163,7 @@ namespace BlazorWeb.Pages.Reply
             return string.Join('_', parts);
         }
 
-        private void AddParametersToDict(string name, object[] values, ref List<ReplyQuery> data)
+        private static void AddParametersToDict(string name, object[] values, ref List<ReplyQuery> data)
         {
             if (data.Count == 0)
                 foreach (var value in values)
@@ -184,37 +184,6 @@ namespace BlazorWeb.Pages.Reply
                         data.Add(copy);
                     }
             }
-        }
-
-        private void DateChanged(DateTime? date)
-        {
-            if (date == null)
-                return;
-
-            var range = DateTimeTools.GetSpecificWholeDayRangeUtc(DateTimeTools.SetLocalTimeZone(date.Value));
-            startTime = range.Item1;
-            endTime = range.Item2;
-
-        }
-
-        private void SelectUsers()
-        {
-            var parameters = new DialogParameters();
-
-            var callback = new EventCallbackFactory().Create<List<BiliUser>>(this, OnUsersSelected);
-            parameters.Add("UsersSelected", callback);
-
-            dialogService.Show<UserSelectDialog>("选择用户", parameters);
-        }
-
-        private void SelectUps()
-        {
-            var parameters = new DialogParameters();
-
-            var callback = new EventCallbackFactory().Create<List<BiliUser>>(this, OnUpsSelected);
-            parameters.Add("UpsSelected", callback);
-
-            dialogService.Show<UpSelectDialog>("选择UP", parameters);
         }
 
         class ReplyQuery

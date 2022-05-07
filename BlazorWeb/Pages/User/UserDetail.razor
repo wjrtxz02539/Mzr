@@ -11,10 +11,15 @@
     <MudItem xs="9">
         <MudTabs>
             <MudTabPanel Text="评论">
-                <ReplyPagination UserId=@UserId Sort=@Sort></ReplyPagination>
+                <ReplyPagination UserId=@UserId Sort=@Sort ThreadId=@ThreadId UpId=@UpId></ReplyPagination>
             </MudTabPanel>
             <MudTabPanel Text="动态">
                 <DynamicPagination UserId=@UserId Sort=@Sort></DynamicPagination>
+            </MudTabPanel>
+            <MudTabPanel Text="统计">
+                <ReplyLineChart UserIds=@(new(){UserId}) ControlEnabled="true" 
+                                ThreadIds=@(ThreadId.HasValue ? new(){ThreadId.Value} : new())
+                                UpIds=@(UpId.HasValue ? new(){UpId.Value} : new()) />
             </MudTabPanel>
         </MudTabs>
     </MudItem>
@@ -22,8 +27,14 @@
 
 @code {
     [Parameter]
-    public long? UserId { get; set; } = null;
+    public long UserId { get; set; }
     [Parameter]
     public string Sort { get; set; } = "-time";
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "threadId")]
+    public long? ThreadId { get; set; } = null;
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "upId")]
+    public long? UpId { get; set; } = null;
 
 }

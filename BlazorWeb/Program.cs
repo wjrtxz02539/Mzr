@@ -9,6 +9,9 @@ using Mzr.Share.Interfaces.Bilibili;
 using Mzr.Share.Repositories.Bilibili;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using BlazorWeb.Repositories;
+using Blazorise;
+using Blazorise.Bootstrap;
+using Blazorise.Icons.FontAwesome;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +31,13 @@ builder.Services.AddRazorPages(options =>
 });
 builder.Services.AddServerSideBlazor().AddMicrosoftIdentityConsentHandler();
 builder.Services.AddMudServices();
+builder.Services
+    .AddBlazorise(options =>
+    {
+        options.Immediate = true;
+    })
+    .AddBootstrapProviders()
+    .AddFontAwesomeIcons();
 
 builder.Logging.AddSimpleConsole(options =>
 {

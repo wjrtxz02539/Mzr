@@ -1,16 +1,18 @@
 ﻿namespace BlazorWeb.Data
 {
+    using BlazorWeb.Models.Chart;
     using MudBlazor;
     using Mzr.Share.Models.Bilibili;
     public class StatusService
     {
         // Reply increase daily
-        public List<ChartSeries> DailyReplyStatus = new();
+        public TimeLineDefinition? DailyReplyLineChart = null;
 
         // Reply increase daily per up
-        public List<ChartSeries> DailyReplyStatusByUp = new();
+        public TimeLineDefinition? DailyReplyLineChartByUp = null;
         public Tuple<List<BiliUser>, List<double>> DailyReplyTotalByUp = new(new(), new());
         public Tuple<List<BiliUser>, List<double>> MonthlyReplyTotalByUp = new(new(), new());
+        public TimeLineDefinition? MonthlyReplyLineChart = null;
 
         // Running Dynamic
         public List<BiliDynamic> RunningDynamics = new();

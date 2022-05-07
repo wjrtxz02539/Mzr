@@ -35,5 +35,12 @@
 
             return Tuple.Create(startTime, endTime);
         }
+
+        public static Tuple<DateTime, DateTime> Get24HDateRangeUtc()
+        {
+            var endTime = DateTime.UtcNow;
+            var startTime = endTime.AddHours(-24);
+            return Tuple.Create(startTime, endTime);
+        }
     }
 }

@@ -1,20 +1,61 @@
 ﻿@page "/dynamic/threadId/{threadId:long}"
 @layout ContainerLayout
+@inject BiliDynamicService dynamicService
 @attribute [Authorize]
 
 <PageTitle>动态详情</PageTitle>
 
-<MudGrid>
-    <MudItem xs="12">
-        <DynamicCard ThreadId=@ThreadId PaperWidth="auto"></DynamicCard>
-    </MudItem>
-    <MudItem xs="12">
-        <ReplyPagination ThreadId=@ThreadId Sort="-time"></ReplyPagination>
-    </MudItem>
-</MudGrid>
+@if (dynamic == null)
+{
+    <MudText Typo=@Typo.h6>动态未找到</MudText>
+}
+else
+{
+    <MudGrid>
+        <MudItem xs="12">
+            <DynamicCard ThreadId=@ThreadId PaperWidth="auto"></DynamicCard>
+        </MudItem>
+        <MudItem xs="12">
+            <MudTabs>
+                <MudTabPanel Text="评论">
+                    <ReplyPagination ThreadId=@ThreadId Sort="-time"></ReplyPagination>
+                </MudTabPanel>
+                <MudTabPanel Text="统计">
+                    <MudGrid>
+                        <MudItem xs="3">
+                            <MudPaper Elevation="25">
+                                <MudText Typo=@Typo.h6 Align=@Align.Center>最多评论用户</MudText>
+                                <TopUserStatistics ThreadId=@ThreadId Size=20></TopUserStatistics>
+                            </MudPaper>
+                        </MudItem>
+                        <MudItem xs="9">
+                            <MudPaper Elevation="25">
+                                <ReplyLineChart ThreadIds=@(new(){ThreadId}) ControlEnabled="true" StartTime=@dynamic.Time EndTime=@GetEndTime(dynamic.Time) />
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+            </MudTabs>
+        </MudItem>
+    </MudGrid>
+}
 
 @code {
     [Parameter]
-    public long? ThreadId { get; set; } = null;
+    public long ThreadId { get; set; }
 
+    private BiliDynamic? dynamic;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        dynamic = await dynamicService.GetByThreadId(ThreadId);
+    }
+
+    private DateTime GetEndTime(DateTime startTime)
+    {
+        var endTime = startTime.AddDays(7);
+        if (endTime > DateTime.UtcNow)
+            return DateTime.UtcNow;
+        return endTime;
+    }
 }
