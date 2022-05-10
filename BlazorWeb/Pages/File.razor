@@ -17,6 +17,7 @@
         <col style="width:16rem" />
         <col style="width:10rem" />
         <col style="width:12rem;" />
+        <col style="width:30rem;" />
         <col />
         <col style="width:2rem" />
     </ColGroup>
@@ -25,6 +26,7 @@
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="created_time" T="WebFile">提交时间</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="function" T="WebFile">功能</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="status" T="WebFile">状态</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">进度</MudTh>
         <MudTh Style="text-align: center">错误信息</MudTh>
         <MudTh Style="text-align: center">操作</MudTh>
     </HeaderContent>
@@ -39,13 +41,16 @@
         <MudTd DataLabel="状态">
             @(Enum.GetName(typeof(WebFileStatusEnum), context.Status))
         </MudTd>
+        <MudTd DataLabel="进度">
+            <MudProgressLinear Color="Color.Info" Size="Size.Small" Value=@(context.Progress * 100) />
+        </MudTd>
         <MudTd DataLabel="错误信息">@context.Error</MudTd>
         <MudTd DataLabel="操作">
             @if (context.Status == WebFileStatusEnum.Success)
             {
                 <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
             }
-            @if (context.Status == WebFileStatusEnum.Success || context.Status == WebFileStatusEnum.Failure)
+            @if (context.Status == WebFileStatusEnum.Success || context.Status == WebFileStatusEnum.Failure || webUserService.webUser?.Role == WebUserRole.Admin)
             {
                 <MudButton Variant=@Variant.Filled Color=@Color.Error OnClick=@(() => OnDeleteClick(context))>删除</MudButton>
             }

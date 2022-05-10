@@ -61,8 +61,7 @@ namespace BlazorWeb.Workers
             var task = new Task(async () => await ExportReplyImpl(file, cancellation: cancellation));
             task.Start();
             await task.WaitAsync(cancellation);
-            status.ExportRunningDict.TryRemove(file.Id, out _);
-            logger.LogInformation("Complete export job, queue: {len}.", status.ExportRunningDict.Count);
+            
         }
 
         public async Task ExportReplyImpl(WebFile file, CancellationToken cancellation = default)
@@ -133,6 +132,11 @@ namespace BlazorWeb.Workers
                 file.Error = ex.Message;
                 await fileService.UpdateAsync(file);
                 logger.LogError("Reply export failure: {ex}", ex.Message);
+            }
+            finally
+            {
+                status.ExportRunningDict.TryRemove(file.Id, out _);
+                logger.LogInformation("Complete export job, queue: {len}.", status.ExportRunningDict.Count);
             }
         }
 

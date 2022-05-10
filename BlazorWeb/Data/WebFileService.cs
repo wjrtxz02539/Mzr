@@ -85,8 +85,16 @@ namespace BlazorWeb.Data
             if (file.Id == default)
                 return;
 
-            if (file.GridfsId != default)
-                await fileRepo.Bucket.DeleteAsync(file.GridfsId);
+            try
+            {
+                if (file.GridfsId != default)
+                    await fileRepo.Bucket.DeleteAsync(file.GridfsId);
+            }
+            catch (GridFSFileNotFoundException)
+            {
+                logger.LogWarning("GridFS {id} not found for WebFile {file}.", file.GridfsId, file.Id);
+            }
+
             await fileRepo.DeleteAsync(file.Id);
         }
 
