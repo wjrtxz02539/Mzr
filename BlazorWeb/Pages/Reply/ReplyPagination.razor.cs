@@ -198,6 +198,7 @@ namespace BlazorWeb.Pages.Reply
             {
                 parameters.Add("Content", "下载数量应大于1，小于100000。");
                 dialogService.Show<GeneralDialog>("失败", parameters);
+                return;
             }
 
             if (webUserService.webUser == null)
