@@ -3,7 +3,6 @@
 @inject WebUserService webUserService
 @inject WebFileService fileService
 @inject NavigationManager nav
-@inject IJSRuntime JS
 @attribute [Authorize]
 
 <PageTitle>文件下载</PageTitle>
@@ -48,7 +47,7 @@
         <MudTd DataLabel="操作">
             @if (context.Status == WebFileStatusEnum.Success)
             {
-                <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
+                <MudButton Variant=@Variant.Filled Color=@Color.Info Href=@($"/file/{context.Id}/download") Target="_blank">下载</MudButton>
             }
             @if (context.Status == WebFileStatusEnum.Success || context.Status == WebFileStatusEnum.Failure || webUserService.webUser?.Role == WebUserRole.Admin)
             {

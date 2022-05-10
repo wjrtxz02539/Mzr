@@ -64,22 +64,5 @@ namespace BlazorWeb.Pages
             await Task.Delay(1000);
             await table.ReloadServerData();
         }
-
-        private async Task OnDownloadClick(WebFile file)
-        {
-            if (file.Status != WebFileStatusEnum.Success)
-                return;
-
-            if (file.GridfsId == default)
-                return;
-
-            loading = false;
-            StateHasChanged();
-
-            using var stream = await fileService.OpenDownloadStreamAsync(file);
-            using var streamRef = new DotNetStreamReference(stream: stream);
-
-            await JS.InvokeVoidAsync("downloadFileFromStream", file.Filename, streamRef);
-        }
     }
 }
