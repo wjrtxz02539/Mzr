@@ -186,7 +186,7 @@ namespace BlazorWeb.Data
             };
 
             var file = await fileService.AddAsync(
-                filename: $"{username}_{DateTime.Now:yyyy-MM-dd_HH:mm:ss}.json",
+                filename: $"{username}_{DateTime.Now:yyyy-MM-dd_HH:mm:ss}.zip",
                 username: username,
                 function: WebFileFunction.ReplyExport,
                 parameters: parameters,

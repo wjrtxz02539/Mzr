@@ -181,8 +181,10 @@ namespace BlazorWeb.Pages.Reply
             dialogService.Show<GeneralDialog>("下载评论", parameters);
         }
 
-        private async void DownloadDialogCallback(object value)
+        private async void DownloadDialogCallback(object? value)
         {
+            if (value == null)
+                return;
             var downloadSize = (int)value;
             if (downloadSize == 0)
                 return;

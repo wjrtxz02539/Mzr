@@ -2,9 +2,12 @@
 using BlazorWeb.Models.Configurations;
 using BlazorWeb.Models.Web;
 using BlazorWeb.Repositories;
+using Microsoft.Extensions.Azure;
 using MongoDB.Bson;
 using Mzr.Share.Models.Bilibili;
+using SharpCompress.Archives.Zip;
 using System.Collections.Concurrent;
+using System.IO.Compression;
 using System.Text;
 using System.Text.Json;
 
@@ -71,7 +74,11 @@ namespace BlazorWeb.Workers
 
             try
             {
-                using var stream = await fileService.OpenUploadStreamAsync(file, cancellation: cancellation);
+                using var uploadStream = await fileService.OpenUploadStreamAsync(file, cancellation: cancellation);
+                using var archive = new System.IO.Compression.ZipArchive(uploadStream, ZipArchiveMode.Create, true);
+                var jsonFile = archive.CreateEntry("data.json");
+                using var stream = jsonFile.Open();
+
                 var skip = (int?)file.Parameters.GetValueOrDefault("page", null) ?? 0;
                 var size = (int?)file.Parameters.GetValueOrDefault("size", null) ?? 100;
                 var cursor = replyService.ExportAsync(
@@ -112,6 +119,7 @@ namespace BlazorWeb.Workers
                     }
                 }
                 await stream.WriteAsync(Encoding.UTF8.GetBytes("]"), cancellation);
+
                 file.Progress = 1;
                 file.Status = WebFileStatusEnum.Success;
                 await fileService.UpdateAsync(file);
