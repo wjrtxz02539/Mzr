@@ -168,12 +168,11 @@ namespace BlazorWeb.Pages.Reply
             var parameters = new DialogParameters
             {
                 { "Content", "下载评论数量（根据当前页面开始往后计数）" },
-                { "InputType", typeof(int) },
                 { "InputContent", "下载数量" },
-                { "InputValue", 100 },
+                { "InputValue", "100" },
                 { "CancelText", "取消" },
                 { "SubmitText", "下载" },
-                { "SubmitCallback", new EventCallbackFactory().Create<object?>(this, DownloadDialogCallback) }
+                { "SubmitCallback", new EventCallbackFactory().Create<string?>(this, DownloadDialogCallback) }
             };
 
             loading = false;
@@ -181,7 +180,7 @@ namespace BlazorWeb.Pages.Reply
             dialogService.Show<GeneralDialog>("下载评论", parameters);
         }
 
-        private async void DownloadDialogCallback(object? value)
+        private async void DownloadDialogCallback(string? value)
         {
             if (value == null)
                 return;
@@ -191,9 +190,18 @@ namespace BlazorWeb.Pages.Reply
                 { "SubmitText", "确认" },
             };
 
-            var downloadSize = (int)value;
-            if (downloadSize == 0)
+            int downloadSize;
+            try
+            {
+                downloadSize = Convert.ToInt32(value);
+            }
+            catch (Exception)
+            {
+                parameters.Add("Content", "下载数量应大于1，小于100000。");
+                dialogService.Show<GeneralDialog>("失败", parameters);
                 return;
+            }
+
             if (downloadSize < 1 || downloadSize > 100000)
             {
                 parameters.Add("Content", "下载数量应大于1，小于100000。");

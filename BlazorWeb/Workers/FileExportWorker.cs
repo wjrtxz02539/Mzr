@@ -9,7 +9,9 @@ using SharpCompress.Archives.Zip;
 using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Unicode;
 
 namespace BlazorWeb.Workers
 {
@@ -109,6 +111,7 @@ namespace BlazorWeb.Workers
 
                     await JsonSerializer.SerializeAsync(stream, item, options: new()
                     {
+                        Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
                         WriteIndented = true,
                     }, cancellationToken: cancellation);
                     count++;

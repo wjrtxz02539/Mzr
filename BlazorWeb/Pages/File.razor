@@ -41,8 +41,14 @@
         </MudTd>
         <MudTd DataLabel="错误信息">@context.Error</MudTd>
         <MudTd DataLabel="操作">
-            <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
-            <MudButton Variant=@Variant.Filled Color=@Color.Error OnClick=@(() => OnDeleteClick(context))>删除</MudButton>
+            @if (context.Status == WebFileStatusEnum.Success)
+            {
+                <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
+            }
+            @if (context.Status == WebFileStatusEnum.Success || context.Status == WebFileStatusEnum.Failure)
+            {
+                <MudButton Variant=@Variant.Filled Color=@Color.Error OnClick=@(() => OnDeleteClick(context))>删除</MudButton>
+            }
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>
