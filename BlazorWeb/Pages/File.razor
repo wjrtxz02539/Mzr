@@ -6,6 +6,8 @@
 @inject IJSRuntime JS
 @attribute [Authorize]
 
+<PageTitle>文件下载</PageTitle>
+
 <MudTable ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="WebFile" AllowUnsorted="false" @ref=@table>
     <ToolBarContent>
         <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@(() => table.ReloadServerData())>刷新</MudButton>
@@ -39,7 +41,7 @@
         </MudTd>
         <MudTd DataLabel="错误信息">@context.Error</MudTd>
         <MudTd DataLabel="操作">
-            <MudButton Variant=@Variant.Filled Color=@Color.Primary OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
+            <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
             <MudButton Variant=@Variant.Filled Color=@Color.Error OnClick=@(() => OnDeleteClick(context))>删除</MudButton>
         </MudTd>
     </RowTemplate>
