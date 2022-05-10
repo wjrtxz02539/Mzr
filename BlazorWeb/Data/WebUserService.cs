@@ -8,9 +8,9 @@ namespace BlazorWeb.Data
     public class WebUserService
     {
         public bool IsBanned => webUser?.Banned ?? false;
+        public WebUser? webUser { get; set; }
 
         private readonly WebUserRepository webUserRepo;
-        private WebUser? webUser;
         private ILogger logger;
         private WebLogRepository logRepo;
 
@@ -22,7 +22,7 @@ namespace BlazorWeb.Data
         }
 
 
-        public async Task Init(string? username)
+        public void Init(string? username)
         {
             if (webUser != null)
                 return;
@@ -33,7 +33,7 @@ namespace BlazorWeb.Data
                 return;
             }
 
-            var response = await webUserRepo.Collection.Find(f => f.Username == username).FirstOrDefaultAsync();
+            var response = webUserRepo.Collection.Find(f => f.Username == username).FirstOrDefault();
             if(response == null)
             {
                 var newUser = new WebUser
@@ -44,7 +44,7 @@ namespace BlazorWeb.Data
                     VisitCount = 1,
                     VisitTime = DateTime.UtcNow,
                 };
-                await webUserRepo.InsertAsync(newUser);
+                webUserRepo.Collection.InsertOne(newUser);
                 logger.LogInformation("Welcome {name}.", username);
             }
             else
@@ -53,7 +53,7 @@ namespace BlazorWeb.Data
                 webUser.LoginTime = DateTime.UtcNow;
                 webUser.VisitTime = DateTime.UtcNow;
                 webUser.VisitCount++;
-                await webUserRepo.UpdateAsync(webUser);
+                webUserRepo.Collection.ReplaceOne(f => f.Id == webUser.Id, webUser);
             }
         }
 

@@ -6,6 +6,8 @@ namespace BlazorWeb.Models.Configurations
     {
         public DatabaseConfiguration Database { get; set; } = new();
         public List<long> MonitorUserIds { get; set; } = new();
+        public int FileExportConcurrency { get; set; } = 5;
+        public int FileExportQueueLength { get; set; } = 30;
 
         public void Validate()
         {

@@ -1,0 +1,59 @@
+﻿
+<MudDialog>
+    <DialogContent>
+        @if (Content != null)
+        {
+            <MudText Typo=@Typo.h6>@Content</MudText>
+        }
+        @if (InputType != null)
+        {
+            <MudInput T=@InputType Value=@(InputValue == null ? default : (InputType)InputValue) Placeholder=@(InputContent ?? string.Empty)  />
+        }
+    </DialogContent>
+    <DialogActions>
+        @if (CancelText != null)
+        {
+            <MudButton Variant=@Variant.Filled ButtonType=@ButtonType.Button OnClick=@OnCancelClick>@CancelText</MudButton>
+        }
+        @if (SubmitText != null)
+        {
+            <MudButton Variant=@Variant.Filled ButtonType=@ButtonType.Button OnClick=@OnSubmitClick>@SubmitText</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public string? Content { get; set; } = null;
+
+    [Parameter]
+    public Type? InputType { get; set; } = null;
+
+    [Parameter]
+    public string? InputContent { get; set; } = null;
+
+    [Parameter]
+    public object? InputValue { get; set; } = null;
+
+    [Parameter]
+    public string? CancelText { get; set; } = null;
+
+    [Parameter]
+    public string? SubmitText { get; set; } = null;
+
+    [Parameter]
+    public EventCallback<object?> SubmitCallback { get; set; }
+
+    private async Task OnSubmitClick(MouseEventArgs e)
+    {
+        if (SubmitCallback.HasDelegate)
+        {
+            await SubmitCallback.InvokeAsync(InputValue);
+        }
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void OnCancelClick() => MudDialog.Cancel();
+}

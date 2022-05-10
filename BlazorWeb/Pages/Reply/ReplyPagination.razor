@@ -1,6 +1,8 @@
 ﻿@page "/reply-pagination"
 @inject BiliReplyService replyService
 @inject WebUserService webUserService
+@inject IDialogService dialogService
+@inject StatusService statusService
 @inject NavigationManager nav
 @attribute [Authorize]
 
@@ -12,6 +14,7 @@
         <MudTextField T="string" Placeholder="评论内容" Adornment="Adornment.Start" Value=@replyQuery @ref=@queryField
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
         <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@OnQueryClick>查询</MudButton>
+        <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@OnDownloadClick>下载</MudButton>
     </ToolBarContent>
     <ColGroup>
         <col style="width:3rem;" />

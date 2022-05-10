@@ -1,0 +1,56 @@
+﻿@page "/file"
+@inject BiliReplyService replyService
+@inject WebUserService webUserService
+@inject WebFileService fileService
+@inject NavigationManager nav
+@inject IJSRuntime JS
+@attribute [Authorize]
+
+<MudTable ServerData=@ServerDataReload Hover="true" Loading="@loading" Striped="true" T="WebFile" AllowUnsorted="false" @ref=@table>
+    <ToolBarContent>
+        <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@(() => table.ReloadServerData())>刷新</MudButton>
+    </ToolBarContent>
+    <ColGroup>
+        <col style="width:10rem;" />
+        <col style="width:16rem" />
+        <col style="width:10rem" />
+        <col style="width:12rem;" />
+        <col />
+        <col style="width:2rem" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="username" T="WebFile">用户</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="created_time" T="WebFile">提交时间</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="function" T="WebFile">功能</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="status" T="WebFile">状态</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center">错误信息</MudTh>
+        <MudTh Style="text-align: center">操作</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="用户">
+                @context.Username
+        </MudTd>
+        <MudTd DataLabel="提交时间">@context.CreatedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+        <MudTd DataLabel="功能">
+            @context.Function
+        </MudTd>
+        <MudTd DataLabel="状态">
+            @(Enum.GetName(typeof(WebFileStatusEnum), context.Status))
+        </MudTd>
+        <MudTd DataLabel="错误信息">@context.Error</MudTd>
+        <MudTd DataLabel="操作">
+            <MudButton Variant=@Variant.Filled Color=@Color.Primary OnClick=@(() => OnDownloadClick(context))>下载</MudButton>
+            <MudButton Variant=@Variant.Filled Color=@Color.Error OnClick=@(() => OnDeleteClick(context))>删除</MudButton>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>找不到相应评论信息</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>加载中...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+
+</MudTable>

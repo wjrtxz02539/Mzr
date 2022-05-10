@@ -1,8 +1,13 @@
 ﻿namespace BlazorWeb.Data
 {
     using BlazorWeb.Models.Chart;
+    using BlazorWeb.Models.Configurations;
+    using BlazorWeb.Models.Web;
+    using MongoDB.Bson;
     using MudBlazor;
     using Mzr.Share.Models.Bilibili;
+    using System.Collections.Concurrent;
+
     public class StatusService
     {
         // Reply increase daily
@@ -29,5 +34,29 @@
 
         // Top user daily
         public List<Tuple<int, long, BiliUser?>> TopUsers = new();
+
+        // For FileExportWorker
+        public ConcurrentQueue<WebFile> ExportWaitingQueue { get; } = new();
+        public ConcurrentDictionary<ObjectId, WebFile> ExportRunningDict { get; } = new();
+        public WebConfiguration configuration { get; }
+
+        private ILogger logger;
+        public StatusService(ILogger<StatusService> logger, WebConfiguration configuration)
+        {
+            this.logger = logger;
+            this.configuration = configuration;
+        }
+
+        public bool SubmitExportJob(WebFile file)
+        {
+            if (ExportWaitingQueue.Count > configuration.FileExportQueueLength)
+            {
+                logger.LogError("Export queue full, WebFile id: {id}.", file.Id);
+                return false;
+            }
+
+            ExportWaitingQueue.Enqueue(file);
+            return true;
+        }
     }
 }

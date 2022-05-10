@@ -65,11 +65,14 @@ builder.Services.AddSingleton<IBiliUserRepository, BiliUserRepository>()
                 .AddSingleton<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
                 .AddSingleton<WebUserRepository>()
                 .AddSingleton<WebLogRepository>()
+                .AddSingleton<WebFileRepository>()
                 .AddSingleton<StatusService>()
                 .AddScoped<BiliReplyService>()
                 .AddScoped<BiliUserService>()
                 .AddScoped<BiliDynamicService>()
                 .AddScoped<WebUserService>()
+                .AddScoped<WebFileService>()
+                .AddHostedService<FileExportWorker>()
                 .AddHostedService<StatusUpdateWorker>();
 
 var app = builder.Build();

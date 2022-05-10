@@ -1,4 +1,5 @@
-﻿using BlazorWeb.Utils;
+﻿using BlazorWeb.Shared;
+using BlazorWeb.Utils;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
@@ -40,7 +41,9 @@ namespace BlazorWeb.Pages.Reply
         private MudTable<BiliReply> table = default!;
 
         private string? replyQuery = null;
-        private string? sort = null;
+        private string sort = null!;
+        private int page = 1;
+        private int size = 10;
         private bool loading = true;
         private DateTime? startTime;
         private DateTime? endTime;
@@ -94,14 +97,17 @@ namespace BlazorWeb.Pages.Reply
                     sort = $"-{sort}";
             }
 
+            page = state.Page + 1;
+            size = state.PageSize;
+
             var response = await replyService.PaginationAsync(
                 userId: UserId,
                 threadId: ThreadId,
                 upId: UpId,
                 dialogId: DialogId,
-                page: state.Page + 1,
-                size: state.PageSize,
-                sort: sort ?? string.Empty,
+                page: page,
+                size: size,
+                sort: sort,
                 contentQuery: replyQuery,
                 startTime: startTime,
                 endTime: endTime,
@@ -120,7 +126,7 @@ namespace BlazorWeb.Pages.Reply
             {"parent", ParentId},
             {"page", state.Page + 1},
             {"size", state.PageSize},
-            {"sort", sort ?? string.Empty},
+            {"sort", sort},
             { "contentQuery", replyQuery },
             {"startTime", startTime },
             {"endTime", endTime}
@@ -147,12 +153,74 @@ namespace BlazorWeb.Pages.Reply
             }
         }
 
-        private void OnQueryClick(MouseEventArgs e)
+        private void OnQueryClick()
         {
             DateRangeChanged(dateRangePicker.DateRange);
             replyQuery = string.IsNullOrEmpty(queryField.Value) ? null : queryField.Value;
 
             table.ReloadServerData();
+        }
+
+        private void OnDownloadClick(MouseEventArgs e)
+        {
+            OnQueryClick();
+
+            var parameters = new DialogParameters
+            {
+                { "Content", "下载评论数量（根据当前页面开始往后计数）" },
+                { "InputType", typeof(int) },
+                { "InputContent", "下载数量" },
+                { "InputValue", 100 },
+                { "CancelText", "取消" },
+                { "SubmitText", "下载" },
+                { "SubmitCallback", new EventCallbackFactory().Create<object?>(this, DownloadDialogCallback) }
+            };
+
+            loading = false;
+            StateHasChanged();
+            dialogService.Show<GeneralDialog>("下载评论", parameters);
+        }
+
+        private async void DownloadDialogCallback(object value)
+        {
+            var downloadSize = (int)value;
+            if (downloadSize == 0)
+                return;
+            if (webUserService.webUser == null)
+                return;
+
+            var result = await replyService.SubmitExportTask(
+                username: webUserService.webUser.Username,
+                userId: UserId,
+                threadId: ThreadId,
+                upId: UpId,
+                dialogId: DialogId,
+                skip: (page - 1) * size,
+                size: downloadSize,
+                sort: sort,
+                contentQuery: replyQuery,
+                startTime: startTime,
+                endTime: endTime,
+                root: RootId,
+                parent: ParentId
+                );
+
+            var parameters = new DialogParameters
+            {
+                { "SubmitText", "确认" },
+            };
+
+            if (result != null)
+            {
+                parameters.Add("Content", "下载任务添加成功，请去文件页面，查看具体任务进度及文件下载。");
+                dialogService.Show<GeneralDialog>("成功", parameters);
+            }
+            else
+            {
+                parameters.Add("Content", $"下载任务添加失败，当前导出队列长度为 {statusService.ExportRunningDict.Count}，请稍后再试。");
+                dialogService.Show<GeneralDialog>("失败", parameters);
+            }
+
         }
     }
 }

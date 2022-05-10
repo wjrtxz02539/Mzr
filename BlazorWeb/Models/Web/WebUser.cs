@@ -25,5 +25,8 @@ namespace BlazorWeb.Models.Web
 
         [BsonElement("query_count")]
         public int QueryCount { get; set; } = 0;
+
+        [BsonElement("role")]
+        public WebUserRole Role { get; set; } = WebUserRole.User;
     }
 }

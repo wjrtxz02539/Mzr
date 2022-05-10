@@ -13,11 +13,11 @@ namespace Mzr.Share.Repositories
 {
     public class MongoDBRepository<T> : IMongoDBRepository<T> where T : MongoDBBase
     {
-        public ILogger Logger;
+        public ILogger Logger { get; }
+        public IMongoDatabase? Database { get; }
 
         private readonly string CollectionName;
         private readonly List<CreateIndexModel<T>> _indexModels;
-        private static IMongoDatabase? Database;
         private IMongoCollection<T>? _collection = null;
 
         public IMongoCollection<T> Collection

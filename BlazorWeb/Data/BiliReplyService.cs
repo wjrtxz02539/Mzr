@@ -1,11 +1,12 @@
 ﻿using BlazorWeb.Models.Chart;
 using BlazorWeb.Models.Web;
-using Microsoft.Extensions.Logging;
+using BlazorWeb.Workers;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using Mzr.Share.Interfaces.Bilibili;
 using Mzr.Share.Models.Bilibili;
+using System.Runtime.CompilerServices;
 
 namespace BlazorWeb.Data
 {
@@ -14,11 +15,16 @@ namespace BlazorWeb.Data
         private readonly ILogger<BiliReplyService> logger;
         private readonly IBiliReplyRepository replyRepo;
         private readonly IBiliDynamicRepository dynamicRepo;
-        public BiliReplyService(ILogger<BiliReplyService> logger, IBiliReplyRepository replyRepo, IBiliDynamicRepository dynamicRepo)
+        private readonly WebFileService fileService;
+        private readonly StatusService statusService;
+        public BiliReplyService(ILogger<BiliReplyService> logger, IBiliReplyRepository replyRepo, IBiliDynamicRepository dynamicRepo, 
+            WebFileService fileService, StatusService statusService)
         {
             this.logger = logger;
             this.replyRepo = replyRepo;
             this.dynamicRepo = dynamicRepo;
+            this.fileService = fileService;
+            this.statusService = statusService;
         }
 
         public FilterDefinition<BiliReply> FilterBuilder(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
@@ -45,6 +51,24 @@ namespace BlazorWeb.Data
             if (endTime.HasValue)
                 filter &= filterBuilder.Lte(f => f.Time, endTime.Value.ToUniversalTime());
             return filter;
+        }
+
+        public SortDefinition<BiliReply> GetSortDefinition(string sort)
+        {
+            var builder = Builders<BiliReply>.Sort;
+            SortDefinition<BiliReply> sortDefinition = sort switch
+            {
+                "time" => builder.Ascending(f => f.Time),
+                "-time" => builder.Descending(f => f.Time),
+                "user_id" => builder.Ascending(f => f.UserId),
+                "-user_id" => builder.Descending(f => f.UserId),
+                "like" => builder.Ascending(f => f.Like),
+                "-like" => builder.Descending(f => f.Like),
+                "replies_count" => builder.Ascending(f => f.RepliesCount),
+                "-replies_count" => builder.Descending(f => f.RepliesCount),
+                _ => new BsonDocument(),
+            };
+            return sortDefinition;
         }
 
         public async Task<List<Tuple<int, long, BiliUser?>>> GetTopUsersAsync(DateTime? startTime = null, DateTime? endTime = null, long? upId = null,
@@ -84,27 +108,16 @@ namespace BlazorWeb.Data
             return result;
         }
 
+
         public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             int page = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
-            long? root = null, long? parent = null)
+            long? root = null, long? parent = null, CancellationToken cancellation = default)
         {
             var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
                 contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
 
-            var builder = Builders<BiliReply>.Sort;
-            SortDefinition<BiliReply> sortDefinition = sort switch
-            {
-                "time" => builder.Ascending(f => f.Time),
-                "-time" => builder.Descending(f => f.Time),
-                "user_id" => builder.Ascending(f => f.UserId),
-                "-user_id" => builder.Descending(f => f.UserId),
-                "like" => builder.Ascending(f => f.Like),
-                "-like" => builder.Descending(f => f.Like),
-                "replies_count" => builder.Ascending(f => f.RepliesCount),
-                "-replies_count" => builder.Descending(f => f.RepliesCount),
-                _ => new BsonDocument(),
-            };
-            var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync();
+            var sortDefinition = GetSortDefinition(sort);
+            var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync(cancellation);
             var totalCount = (int)await replyRepo.Collection.CountDocumentsAsync(filter);
             return new PagingResponse<BiliReply>(result, totalCount: totalCount, pageSize: size, currentPage: page);
         }
@@ -134,6 +147,60 @@ namespace BlazorWeb.Data
             }, cancellationToken: cancellationToken);
 
             return result;
+        }
+
+        public async IAsyncEnumerable<BiliReply> ExportAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
+            int skip = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
+            long? root = null, long? parent = null, [EnumeratorCancellation] CancellationToken cancellation = default)
+        {
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
+                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
+
+            var sortDefinition = GetSortDefinition(sort);
+            var cursor = await replyRepo.Collection.Find(filter).Limit(size).Skip(skip).Sort(sortDefinition).ToCursorAsync(cancellation);
+            while (await cursor.MoveNextAsync(cancellation))
+            {
+                foreach(var item in cursor.Current)
+                    yield return item;
+            }
+        }
+
+        public async Task<WebFile?> SubmitExportTask(string username, long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
+            int skip = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
+            long? root = null, long? parent = null, DateTime? expiredTime = null, CancellationToken cancellation = default)
+        {
+            var parameters = new Dictionary<string, object?>()
+            {
+                ["userId"] = userId,
+                ["threadId"] = threadId,
+                ["upId"] = upId,
+                ["dialogId"] = dialogId,
+                ["skip"] = skip,
+                ["size"] = size,
+                ["sort"] = sort,
+                ["contentQuery"] = contentQuery,
+                ["startTime"] = startTime,
+                ["endTime"] = endTime,
+                ["root"] = root,
+                ["parent"] = parent
+            };
+
+            var file = await fileService.AddAsync(
+                filename: $"{username}_{DateTime.Now:yyyy-MM-dd_HH:mm:ss}.json",
+                username: username,
+                function: WebFileFunction.ReplyExport,
+                parameters: parameters,
+                createdTime: DateTime.UtcNow,
+                expiredTime: expiredTime ?? DateTime.UtcNow.AddDays(30)
+                );
+
+            if (statusService.SubmitExportJob(file))
+                return file;
+            else
+            {
+                await fileService.DeleteAsync(file);
+                return null;
+            }
         }
     }
 }
