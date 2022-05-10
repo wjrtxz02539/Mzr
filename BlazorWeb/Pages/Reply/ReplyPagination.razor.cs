@@ -185,9 +185,21 @@ namespace BlazorWeb.Pages.Reply
         {
             if (value == null)
                 return;
+
+            var parameters = new DialogParameters
+            {
+                { "SubmitText", "确认" },
+            };
+
             var downloadSize = (int)value;
             if (downloadSize == 0)
                 return;
+            if (downloadSize < 1 || downloadSize > 100000)
+            {
+                parameters.Add("Content", "下载数量应大于1，小于100000。");
+                dialogService.Show<GeneralDialog>("失败", parameters);
+            }
+
             if (webUserService.webUser == null)
                 return;
 
@@ -207,10 +219,7 @@ namespace BlazorWeb.Pages.Reply
                 parent: ParentId
                 );
 
-            var parameters = new DialogParameters
-            {
-                { "SubmitText", "确认" },
-            };
+            
 
             if (result != null)
             {
