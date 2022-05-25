@@ -31,7 +31,7 @@ namespace Mzr.Service.Crawler.Worker
 
         public UserWorker(ILogger<UserWorker> logger, IHost host, CrawlerServiceTaskConfiguration configuration)
         {
-            this.logger = logger; 
+            this.logger = logger;
             this.host = host;
             this.configuration = configuration;
 
@@ -72,7 +72,7 @@ namespace Mzr.Service.Crawler.Worker
                         Interlocked.Increment(ref Status.ReplyProcessed);
                     }
                 },
-                dataflowBlockOptions: new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = configuration.MaxReplyConcurrency });
+                dataflowBlockOptions: new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = configuration.MaxReplyConcurrency, BoundedCapacity = configuration.MaxReplyConcurrency });
 
             var threadBlock = new ActionBlock<BiliDynamic>(
                 async dynamic =>
@@ -91,7 +91,7 @@ namespace Mzr.Service.Crawler.Worker
                             do
                             {
                                 postResult = replyBlock.Post(() => webReply.FromRawAsync(rawReply, up, dynamic, requestTimeout: configuration.RequestTimeout));
-                                if(postResult == false)
+                                if (postResult == false)
                                     await Task.Delay(1000);
                             } while (postResult != true);
                         }
@@ -107,7 +107,7 @@ namespace Mzr.Service.Crawler.Worker
                         Status.RunningDynamic.TryRemove(dynamic.DynamicId, out _);
                     }
                 },
-                dataflowBlockOptions: new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism= configuration.MaxDynamicConcurrency });
+                dataflowBlockOptions: new ExecutionDataflowBlockOptions() { MaxDegreeOfParallelism = configuration.MaxDynamicConcurrency, BoundedCapacity = configuration.MaxDynamicConcurrency });
 
             var dynamicBlock = new ActionBlock<long>(
                 async input =>
@@ -115,8 +115,8 @@ namespace Mzr.Service.Crawler.Worker
                     Running = true;
                     logger.LogInformation("{logPrefix} Start.", logPrefix);
                     var webDynamic = host.Services.GetRequiredService<WebBiliDynamicRepository>();
-                    
-                    await foreach (var dynamic in webDynamic.FromUserIdAsync(input, 
+
+                    await foreach (var dynamic in webDynamic.FromUserIdAsync(input,
                         skip: configuration.Skip,
                         maxDepth: configuration.MaxDepth,
                         maxDays: configuration.MaxDays,
@@ -176,7 +176,7 @@ namespace Mzr.Service.Crawler.Worker
                     await Task.Delay(TimeSpan.FromMinutes(configuration.RestartMinutes), cancellationToken: stoppingToken);
                 } while (!stoppingToken.IsCancellationRequested);
             }
-            catch(TaskCanceledException)
+            catch (TaskCanceledException)
             {
                 return;
             }
