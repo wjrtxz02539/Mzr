@@ -160,7 +160,7 @@ namespace BlazorWeb.Pages.Reply
         {
             DateRangeChanged(dateRangePicker.DateRange);
             replyQuery = string.IsNullOrEmpty(queryField.Value) ? null : queryField.Value;
-            ipQuery = string.IsNullOrEmpty(ipQueryField.Value) ? null : ipQueryField.Value;
+            ipQuery = string.IsNullOrEmpty(ipQueryField.Value) ? null : ipQueryField.Value.Trim();
 
             table.ReloadServerData();
         }
@@ -245,7 +245,6 @@ namespace BlazorWeb.Pages.Reply
                 parameters.Add("Content", $"下载任务添加失败，当前导出队列长度为 {statusService.ExportRunningDict.Count}，请稍后再试。");
                 dialogService.Show<GeneralDialog>("失败", parameters);
             }
-
         }
     }
 }

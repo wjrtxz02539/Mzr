@@ -122,7 +122,7 @@ namespace BlazorWeb.Data
 
             var sortDefinition = GetSortDefinition(sort);
             var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync(cancellation);
-            var totalCount = (int)await replyRepo.Collection.CountDocumentsAsync(filter);
+            var totalCount = (int)await replyRepo.Collection.CountDocumentsAsync(filter, cancellationToken: cancellation);
             return new PagingResponse<BiliReply>(result, totalCount: totalCount, pageSize: size, currentPage: page);
         }
 
@@ -130,10 +130,11 @@ namespace BlazorWeb.Data
             string? contentQuery = null, string? ipQuery = null, DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
         {
             var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, contentQuery: contentQuery, startTime: startTime, endTime: endTime, ipQuery: ipQuery);
+            var filterBson = filter.Render(replyRepo.Collection.DocumentSerializer, replyRepo.Collection.Settings.SerializerRegistry);
 
             PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
             {
-                new BsonDocument("$match", filter.Render(replyRepo.Collection.DocumentSerializer, replyRepo.Collection.Settings.SerializerRegistry)),
+                new BsonDocument("$match", filterBson),
                 BsonDocument.Parse("{$project: {year: {$year: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, month: {$month: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, day: {$dayOfMonth: {date: \"$time\", timezone: \"Asia/Shanghai\"}}, hour: { $hour: {date: \"$time\", timezone: \"Asia/Shanghai\"}} }}"),
                 BsonDocument.Parse("{$group: {_id: {year: \"$year\", month: \"$month\", day: \"$day\", hour: \"$hour\"}, count: {$sum: 1}}}"),
                 BsonDocument.Parse("{$project: {_id: 0, count: 1, time: {$dateFromParts: {year: \"$_id.year\", month: \"$_id.month\", day: \"$_id.day\", hour: \"$_id.hour\", timezone: \"Asia/Shanghai\"}}}}"),
@@ -171,7 +172,7 @@ namespace BlazorWeb.Data
 
         public async Task<WebFile?> SubmitExportTask(string username, long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             int skip = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
-            long? root = null, long? parent = null, string? ipQuery = null, DateTime? expiredTime = null, CancellationToken cancellation = default)
+            long? root = null, long? parent = null, string? ipQuery = null, DateTime? expiredTime = null)
         {
             var parameters = new Dictionary<string, object?>()
             {

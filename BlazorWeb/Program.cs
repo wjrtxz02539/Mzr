@@ -59,13 +59,13 @@ builder.Services.AddSingleton<IMongoDatabase>((provider) =>
     return client.GetDatabase(config.Database.DatabaseName);
 });
 
-builder.Services.AddSingleton<IBiliUserRepository, BiliUserRepository>()
-                .AddSingleton<IBiliDynamicRepository, BiliDynamicRepository>()
-                .AddSingleton<IBiliReplyRepository, BiliReplyRepository>()
-                .AddSingleton<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
-                .AddSingleton<WebUserRepository>()
-                .AddSingleton<WebLogRepository>()
-                .AddSingleton<WebFileRepository>()
+builder.Services.AddScoped<IBiliUserRepository, BiliUserRepository>()
+                .AddScoped<IBiliDynamicRepository, BiliDynamicRepository>()
+                .AddScoped<IBiliReplyRepository, BiliReplyRepository>()
+                .AddScoped<IBiliDynamicRunRecordRepository, BiliDynamicRunRecordRepository>()
+                .AddScoped<WebUserRepository>()
+                .AddScoped<WebLogRepository>()
+                .AddScoped<WebFileRepository>()
                 .AddSingleton<StatusService>()
                 .AddScoped<BiliReplyService>()
                 .AddScoped<BiliUserService>()

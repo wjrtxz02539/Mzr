@@ -33,7 +33,7 @@ namespace Mzr.Share.Repositories
                         Database.CreateCollection(CollectionName);
 
                     _collection = Database?.GetCollection<T>(CollectionName);
-                    if (_indexModels.Count > 0)
+                    if (_indexModels.Count > 0 && _collection?.Indexes.List().ToList().Count <= 1)
                         _collection?.Indexes.CreateMany(_indexModels);
                 }
 

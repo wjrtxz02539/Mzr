@@ -18,26 +18,20 @@ namespace BlazorWeb.Workers
     {
         private readonly StatusService statusService;
         private readonly WebConfiguration webConfiguration;
-        private readonly IBiliDynamicRunRecordRepository recordRepo;
-        private readonly IBiliDynamicRepository dynamicRepo;
-        private readonly IBiliReplyRepository replyRepo;
         private readonly ILogger logger;
         private readonly IServiceProvider serviceProvider;
         public StatusUpdateWorker(StatusService statusService, WebConfiguration webConfiguration,
-            IBiliDynamicRunRecordRepository recordRepo, IBiliDynamicRepository dynamicRepo, IBiliReplyRepository replyRepo,
             ILogger<StatusUpdateWorker> logger, IServiceProvider serviceProvider)
         {
             this.statusService = statusService;
             this.webConfiguration = webConfiguration;
-            this.recordRepo = recordRepo;
-            this.dynamicRepo = dynamicRepo;
-            this.replyRepo = replyRepo;
             this.logger = logger;
             this.serviceProvider = serviceProvider;
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var task = new Task(async () => await RefreshDailyStatus(stoppingToken));
+            await Task.Delay(10000);
             task.Start();
 
             await task.WaitAsync(stoppingToken);
@@ -55,10 +49,13 @@ namespace BlazorWeb.Workers
                     var replyService = scope.ServiceProvider.GetRequiredService<BiliReplyService>();
                     var userService = scope.ServiceProvider.GetRequiredService<BiliUserService>();
                     var dynamicService = scope.ServiceProvider.GetRequiredService<BiliDynamicService>();
+                    var replyRepo = scope.ServiceProvider.GetRequiredService<IBiliReplyRepository>();
+                    var recordRepo = scope.ServiceProvider.GetRequiredService<IBiliDynamicRunRecordRepository>();
+                    var dynamicRepo = scope.ServiceProvider.GetRequiredService<IBiliDynamicRepository>();
 
                     stopWatch.Restart();
                     statusService.DailyReplyLineChart = new(dateRange.Item1, dateRange.Item2);
-                    statusService.DailyReplyLineChart.AddDataSet(new(await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2), "评论总数"));
+                    statusService.DailyReplyLineChart.AddDataSet(new(await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2, cancellationToken: cancellationToken), "评论总数"));
 
                     statusService.DailyReplyLineChartByUp = new(dateRange.Item1, dateRange.Item2);
                     statusService.MonitoredUp.Clear();
@@ -70,7 +67,7 @@ namespace BlazorWeb.Workers
                         var up = await userService.GetByUserId(upId);
 
                         statusService.DailyReplyLineChartByUp.AddDataSet(new(
-                            data: await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2, upId: upId),
+                            data: await replyService.TimeGroupAsync(startTime: dateRange.Item1, endTime: dateRange.Item2, upId: upId, cancellationToken: cancellationToken),
                             label: up?.Username ?? upId.ToString()));
                         if (up != null)
                         {
@@ -119,7 +116,7 @@ namespace BlazorWeb.Workers
                     var monthlyEndTime = DateTime.UtcNow;
                     statusService.MonthlyReplyLineChart = new(monthlyStartTime, monthlyEndTime);
                     statusService.MonthlyReplyLineChart.AddDataSet(new(
-                        data: await replyService.TimeGroupAsync(startTime: monthlyStartTime, endTime: monthlyEndTime),
+                        data: await replyService.TimeGroupAsync(startTime: monthlyStartTime, endTime: monthlyEndTime, cancellationToken: cancellationToken),
                         label: "评论总数"));
 
                     stopWatch.Stop();
