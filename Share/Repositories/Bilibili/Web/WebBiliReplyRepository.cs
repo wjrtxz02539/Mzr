@@ -245,7 +245,8 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 HasFolded = raw.Folder.HasFolded,
                 IsFolded = raw.Folder.IsFolded,
                 Invisible = raw.Invisible,
-                RepliesCount = raw.ReplyCount
+                RepliesCount = raw.ReplyCount,
+                IP = raw.Content.IPv6
             };
 
             document.User = new BiliReplyUser()
@@ -293,8 +294,10 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                         Vip = document.User.Vip,
                         Sailings = document.User.Sailings,
                         Pendants = document.User.Pendants,
-                        UpdateTime = DateTime.UtcNow
+                        UpdateTime = DateTime.UtcNow,
                     };
+                    if (!string.IsNullOrEmpty(document.IP))
+                        dbUser.IPList.Add(document.IP);
                 }
                 try
                 {
@@ -327,6 +330,8 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     dbUser.Usernames.Add(document.User.Username);
                 if(!dbUser.Signs.Contains(document.User.Sign))
                     dbUser.Signs.Add(document.User.Sign);
+                if (!string.IsNullOrEmpty(document.IP) && !dbUser.IPList.Contains(document.IP))
+                    dbUser.IPList.Add(document.IP);
 
                 await userRepo.UpdateAsync(dbUser);
             }

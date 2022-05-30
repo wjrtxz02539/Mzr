@@ -41,6 +41,7 @@ namespace BlazorWeb.Pages.Reply
         private MudTable<BiliReply> table = default!;
 
         private string? replyQuery = null;
+        private string? ipQuery = null;
         private string sort = null!;
         private int page = 1;
         private int size = 10;
@@ -50,6 +51,7 @@ namespace BlazorWeb.Pages.Reply
         private DateRange dateRange => new DateRange(startTime?.ToLocalTime(), endTime?.ToLocalTime());
         private MudDateRangePicker dateRangePicker = null!;
         private MudTextField<string> queryField = null!;
+        private MudTextField<string> ipQueryField = null!;
 
         protected override void OnInitialized()
         {
@@ -112,7 +114,8 @@ namespace BlazorWeb.Pages.Reply
                 startTime: startTime,
                 endTime: endTime,
                 root: RootId,
-                parent: ParentId
+                parent: ParentId,
+                ipQuery: ipQuery
             );
 
             watch.Stop();
@@ -157,6 +160,7 @@ namespace BlazorWeb.Pages.Reply
         {
             DateRangeChanged(dateRangePicker.DateRange);
             replyQuery = string.IsNullOrEmpty(queryField.Value) ? null : queryField.Value;
+            ipQuery = string.IsNullOrEmpty(ipQueryField.Value) ? null : ipQueryField.Value;
 
             table.ReloadServerData();
         }
@@ -225,7 +229,8 @@ namespace BlazorWeb.Pages.Reply
                 startTime: startTime,
                 endTime: endTime,
                 root: RootId,
-                parent: ParentId
+                parent: ParentId,
+                ipQuery: ipQuery
                 );
 
             

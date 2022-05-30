@@ -43,6 +43,10 @@ namespace Mzr.Share.Models.Bilibili
         [BsonElement("signs")]
         public List<string> Signs { get; set; } = new();
 
+        [BsonElement("ip_list")]
+        public List<string> IPList { get; set; } = new();
+
+
         [BsonIgnore]
         public string SexString
         {

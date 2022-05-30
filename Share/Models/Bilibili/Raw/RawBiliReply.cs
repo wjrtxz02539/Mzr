@@ -71,6 +71,9 @@ namespace Mzr.Share.Models.Bilibili.Raw
 
         [JsonPropertyName("plat")]
         public int Plat { get; set; }
+
+        [JsonPropertyName("ipv6")]
+        public string? IPv6 { get; set; } = null;
     }
 
     public class RawBiliReplyFolder

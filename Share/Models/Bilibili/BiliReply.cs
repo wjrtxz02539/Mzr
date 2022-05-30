@@ -73,5 +73,8 @@ namespace Mzr.Share.Models.Bilibili
         public int? Plat { get; set; }
         [BsonElement("replies")]
         public List<string>? Replies { get; set; }
+
+        [BsonElement("ip")]
+        public string? IP { get; set; }
     }
 }

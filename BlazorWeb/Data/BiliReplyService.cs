@@ -28,7 +28,7 @@ namespace BlazorWeb.Data
         }
 
         public FilterDefinition<BiliReply> FilterBuilder(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
-            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null)
+            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null, string? ipQuery = null)
         {
             var filterBuilder = Builders<BiliReply>.Filter;
             FilterDefinition<BiliReply> filter = new BsonDocument();
@@ -50,6 +50,8 @@ namespace BlazorWeb.Data
                 filter &= filterBuilder.Gte(f => f.Time, startTime.Value.ToUniversalTime());
             if (endTime.HasValue)
                 filter &= filterBuilder.Lte(f => f.Time, endTime.Value.ToUniversalTime());
+            if (!string.IsNullOrEmpty(ipQuery))
+                filter &= filterBuilder.Eq(f => f.IP, ipQuery);
             return filter;
         }
 
@@ -66,6 +68,8 @@ namespace BlazorWeb.Data
                 "-like" => builder.Descending(f => f.Like),
                 "replies_count" => builder.Ascending(f => f.RepliesCount),
                 "-replies_count" => builder.Descending(f => f.RepliesCount),
+                "ip" => builder.Ascending(f => f.IP),
+                "-ip" => builder.Descending(f => f.IP),
                 _ => new BsonDocument(),
             };
             return sortDefinition;
@@ -111,10 +115,10 @@ namespace BlazorWeb.Data
 
         public async Task<PagingResponse<BiliReply>> PaginationAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             int page = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
-            long? root = null, long? parent = null, CancellationToken cancellation = default)
+            long? root = null, long? parent = null, string? ipQuery = null, CancellationToken cancellation = default)
         {
             var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
-                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
+                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent, ipQuery: ipQuery);
 
             var sortDefinition = GetSortDefinition(sort);
             var result = await replyRepo.Collection.Find(filter).Limit(size).Skip((page - 1) * size).Sort(sortDefinition).ToListAsync(cancellation);
@@ -123,9 +127,9 @@ namespace BlazorWeb.Data
         }
 
         public async Task<List<TimeLineValue>> TimeGroupAsync(long? userId = null, long? threadId = null, long? upId = null,
-            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
+            string? contentQuery = null, string? ipQuery = null, DateTime? startTime = null, DateTime? endTime = null, CancellationToken cancellationToken = default)
         {
-            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, contentQuery: contentQuery, startTime: startTime, endTime: endTime);
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, contentQuery: contentQuery, startTime: startTime, endTime: endTime, ipQuery: ipQuery);
 
             PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
             {
@@ -151,10 +155,10 @@ namespace BlazorWeb.Data
 
         public async IAsyncEnumerable<BiliReply> ExportAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             int skip = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
-            long? root = null, long? parent = null, [EnumeratorCancellation] CancellationToken cancellation = default)
+            long? root = null, long? parent = null, string? ipQuery = null, [EnumeratorCancellation] CancellationToken cancellation = default)
         {
             var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
-                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent);
+                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent, ipQuery: ipQuery);
 
             var sortDefinition = GetSortDefinition(sort);
             var cursor = await replyRepo.Collection.Find(filter).Limit(size).Skip(skip).Sort(sortDefinition).ToCursorAsync(cancellation);
@@ -167,7 +171,7 @@ namespace BlazorWeb.Data
 
         public async Task<WebFile?> SubmitExportTask(string username, long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
             int skip = 1, int size = 0, string sort = "-time", string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null,
-            long? root = null, long? parent = null, DateTime? expiredTime = null, CancellationToken cancellation = default)
+            long? root = null, long? parent = null, string? ipQuery = null, DateTime? expiredTime = null, CancellationToken cancellation = default)
         {
             var parameters = new Dictionary<string, object?>()
             {
@@ -182,7 +186,8 @@ namespace BlazorWeb.Data
                 ["startTime"] = startTime,
                 ["endTime"] = endTime,
                 ["root"] = root,
-                ["parent"] = parent
+                ["parent"] = parent,
+                ["ipQuery"] = ipQuery
             };
 
             var file = await fileService.AddAsync(

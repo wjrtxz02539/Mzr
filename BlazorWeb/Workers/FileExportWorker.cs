@@ -95,6 +95,7 @@ namespace BlazorWeb.Workers
                     endTime: (DateTime?)file.Parameters.GetValueOrDefault("endTime", null),
                     root: (long?)file.Parameters.GetValueOrDefault("root", null),
                     parent: (long?)file.Parameters.GetValueOrDefault("parent", null),
+                    ipQuery: (string?)file.Parameters.GetValueOrDefault("ipQuery", null),
                     cancellation: cancellation);
 
                 var count = 0;

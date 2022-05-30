@@ -11,7 +11,10 @@
         <MudText Typo="Typo.h6">评论列表</MudText>
         <MudSpacer />
         <MudDateRangePicker Label=@dateQueryLabel Editable="true" DateRange=@dateRange DateFormat="yyyy/MM/dd HH:mm:ss" @ref=@dateRangePicker></MudDateRangePicker>
+        
         <MudTextField T="string" Placeholder="评论内容" Adornment="Adornment.Start" Value=@replyQuery @ref=@queryField
+                      AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+        <MudTextField T="string" Placeholder="IP" Adornment="Adornment.Start" Value=@ipQuery @ref=@ipQueryField
                       AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
         <MudButton Variant=@Variant.Filled Color=@Color.Tertiary OnClick=@OnQueryClick>查询</MudButton>
         <MudButton Variant=@Variant.Filled Color=@Color.Info OnClick=@OnDownloadClick>下载</MudButton>
@@ -22,6 +25,7 @@
         <col style="width:6rem" />
         <col style="width:3rem" />
         <col style="width:12rem;" />
+        <col style="width:12rem;" />
         <col />
         <col style="width:2rem" />
     </ColGroup>
@@ -31,6 +35,7 @@
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="like" T="BiliReply">点赞</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="replies_count" T="BiliReply">回复</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="time" T="BiliReply">时间</MudTableSortLabel></MudTh>
+        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="ip" T="BiliReply">IP</MudTableSortLabel></MudTh>
         <MudTh Style="text-align: center">评论</MudTh>
         <MudTh Style="text-align: center">操作</MudTh>
     </HeaderContent>
@@ -50,6 +55,7 @@
                 @context.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
             </MudText>
         </MudTd>
+        <MudTd DataLabel="IP">@context.IP</MudTd>
         <MudTd DataLabel="评论">@context.Content</MudTd>
         <MudTd DataLabel="操作">
             <MudTooltip Placement=@Placement.Left>

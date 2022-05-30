@@ -25,7 +25,8 @@ namespace Mzr.Share.Repositories.Bilibili
                 new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Ascending(f=>f.UpId), new CreateIndexOptions(){Background=true}),
                 new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Ascending(f=>f.UserId), new CreateIndexOptions(){Background=true}),
                 new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Ascending(f=>f.Dialog), new CreateIndexOptions(){Background=true}),
-                new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Descending(f=>f.Time), new CreateIndexOptions(){Background=true})
+                new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Descending(f=>f.Time), new CreateIndexOptions(){Background=true}),
+                new CreateIndexModel<BiliReply>(Builders<BiliReply>.IndexKeys.Ascending(f=>f.IP), new CreateIndexOptions(){Background=true})
             })
         {
         }
