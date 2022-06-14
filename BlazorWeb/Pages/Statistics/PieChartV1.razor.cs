@@ -12,6 +12,17 @@ namespace BlazorWeb.Pages.Statistics
 
         private PieChart<long> pieChart = null!;
 
+        private readonly List<ChartColor> chartColors = new()
+        {
+            ChartColor.FromRgba(255, 99, 132, 0.7f),
+            ChartColor.FromRgba(54, 162, 235, 0.7f),
+            ChartColor.FromRgba(255, 206, 86, 0.7f),
+            ChartColor.FromRgba(75, 192, 192, 0.7f),
+            ChartColor.FromRgba(153, 102, 255, 0.7f),
+            ChartColor.FromRgba(255, 159, 64, 0.7f)
+        };
+        private Random random = new Random();
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             if (firstRender)
@@ -25,13 +36,34 @@ namespace BlazorWeb.Pages.Statistics
             await pieChart.Clear();
             if (DataSet.Count > 0)
             {
-                await pieChart.AddLabels(DataSet.Select(x => x.Item1));
+                var labels = DataSet.Select(x => x.Item1).ToList();
 
-                var dataSet = new PieChartDataset<long>()
+                var colorSet = chartColors.ToHashSet();
+                var dataList = new List<long>();
+                var colorList = new List<string>();
+                foreach (var item in DataSet)
                 {
-                    Data = DataSet.Select(x => x.Item2).ToList()
+                    string color;
+                    if (colorSet.Count == 0)
+                        color = ChartColor.FromRgba((byte)random.Next(0, 255), (byte)random.Next(0, 255), (byte)random.Next(0, 255), 0.7f).ToJsRgba();
+                    else
+                    {
+                        var colorTemp = colorSet.First();
+                        colorSet.Remove(colorTemp);
+                        color = colorTemp.ToJsRgba();
+                    }
+                    dataList.Add(item.Item2);
+                    colorList.Add(color);
+                }
+
+                var dataSet = new PieChartDataset<long>
+                {
+                    Label = "Up",
+                    Data = dataList,
+                    BackgroundColor = colorList
                 };
-                await pieChart.Update();
+
+                await pieChart.AddLabelsDatasetsAndUpdate(labels, dataSet);
             }
         }
     }
