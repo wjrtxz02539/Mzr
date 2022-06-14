@@ -3,6 +3,7 @@
 @inject WebUserService webUserService
 @inject IDialogService dialogService
 @inject StatusService statusService
+@inject IBiliDynamicRepository dynamicRepo
 @inject NavigationManager nav
 @attribute [Authorize]
 
@@ -57,12 +58,16 @@
         <MudTd DataLabel="操作">
             <MudTooltip Placement=@Placement.Left>
                 <ChildContent>
-                    <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/threadId/{context.ThreadId}") Target="_blank">@(context.Up?.Username ?? "动态")</MudButton>
+                    <MudButton Variant=@Variant.Outlined Color=@Color.Primary Href=@($"/dynamic/threadId/{context.ThreadId}") Target="_blank">@(context.Up?.Username ?? "动态")</MudButton>
                 </ChildContent>
                 <TooltipContent>
                     <DynamicCard ThreadId=@context.ThreadId PaperElevation=0 PaperWidth="500px"></DynamicCard>
                 </TooltipContent>
             </MudTooltip>
+            @if (dynamicDict.ContainsKey(context.ThreadId) && dynamicDict[context.ThreadId] != null)
+            {
+                <MudButton Variant=@Variant.Outlined Color=@Color.Primary Href=@($"https://t.bilibili.com/{dynamicDict[context.ThreadId]?.DynamicId}") Target="_blank">原动态</MudButton>
+            }
         </MudTd>
     </RowTemplate>
     <NoRecordsContent>

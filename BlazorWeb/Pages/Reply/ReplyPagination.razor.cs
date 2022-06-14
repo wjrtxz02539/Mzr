@@ -2,6 +2,7 @@
 using BlazorWeb.Utils;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using MongoDB.Driver;
 using MudBlazor;
 using Mzr.Share.Models.Bilibili;
 using System.Diagnostics;
@@ -48,6 +49,7 @@ namespace BlazorWeb.Pages.Reply
         private bool loading = true;
         private DateTime? startTime;
         private DateTime? endTime;
+        private Dictionary<long, BiliDynamic?> dynamicDict = new();
         private DateRange dateRange => new DateRange(startTime?.ToLocalTime(), endTime?.ToLocalTime());
         private MudDateRangePicker dateRangePicker = null!;
         private MudTextField<string> queryField = null!;
@@ -118,22 +120,41 @@ namespace BlazorWeb.Pages.Reply
                 ipQuery: ipQuery
             );
 
+            dynamicDict = new();
+            response.Items.ForEach(x =>
+            {
+                if (!dynamicDict.ContainsKey(x.ThreadId))
+                    dynamicDict.Add(x.ThreadId, null);
+            });
+
+            MongoDB.Driver.FilterDefinition<BiliDynamic>? dynamicFilter = null;
+            dynamicDict.Keys.ToList().ForEach(x =>
+            {
+                if (dynamicFilter == null)
+                    dynamicFilter = dynamicRepo.Filter.Eq(f => f.ThreadId, x);
+                else
+                    dynamicFilter |= dynamicRepo.Filter.Eq(f => f.ThreadId, x);
+            });
+
+            var dynamicResponse = await dynamicRepo.Collection.Find(dynamicFilter).ToListAsync();
+            dynamicResponse.ForEach(x => { dynamicDict[x.ThreadId] = x; });
+
             watch.Stop();
             var parameters = new Dictionary<string, object?>()
-        {
-            {"userId", UserId},
-            {"threadId", ThreadId},
-            {"upId", UpId},
-            {"dialogId", DialogId},
-            {"root", RootId},
-            {"parent", ParentId},
-            {"page", state.Page + 1},
-            {"size", state.PageSize},
-            {"sort", sort},
-            { "contentQuery", replyQuery },
-            {"startTime", startTime },
-            {"endTime", endTime}
-        };
+            {
+                {"userId", UserId},
+                {"threadId", ThreadId},
+                {"upId", UpId},
+                {"dialogId", DialogId},
+                {"root", RootId},
+                {"parent", ParentId},
+                {"page", state.Page + 1},
+                {"size", state.PageSize},
+                {"sort", sort},
+                {"contentQuery", replyQuery },
+                {"startTime", startTime },
+                {"endTime", endTime}
+            };
 
             await webUserService.Log("ReplyPagination", parameters, status: "Success", elapsed: watch.ElapsedMilliseconds, url: nav.Uri);
 
@@ -233,7 +254,7 @@ namespace BlazorWeb.Pages.Reply
                 ipQuery: ipQuery
                 );
 
-            
+
 
             if (result != null)
             {
