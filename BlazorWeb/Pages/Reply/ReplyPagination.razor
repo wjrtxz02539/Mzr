@@ -30,14 +30,14 @@
         <col style="width:2rem" />
     </ColGroup>
     <HeaderContent>
-        <MudTh Style="text-align: center">头像</MudTh>
-        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="user_id" T="BiliReply">用户名</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="like" T="BiliReply">点赞</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="replies_count" T="BiliReply">回复</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="time" T="BiliReply">时间</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center"><MudTableSortLabel SortLabel="ip" T="BiliReply">IP</MudTableSortLabel></MudTh>
-        <MudTh Style="text-align: center">评论</MudTh>
-        <MudTh Style="text-align: center">操作</MudTh>
+        <MudTh>头像</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="user_id" T="BiliReply">用户名</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="like" T="BiliReply">点赞</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="replies_count" T="BiliReply">回复</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="time" T="BiliReply">时间</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="ip" T="BiliReply">IP</MudTableSortLabel></MudTh>
+        <MudTh>评论</MudTh>
+        <MudTh>操作</MudTh>
     </HeaderContent>
     <RowTemplate>
         <MudTd DataLabel="头像"><MudAvatar Image="@context.User.Avatar"></MudAvatar></MudTd>
@@ -60,7 +60,7 @@
         <MudTd DataLabel="操作">
             <MudTooltip Placement=@Placement.Left>
                 <ChildContent>
-                    <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/threadId/{context.ThreadId}") Target="_blank">动态</MudButton>
+                    <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/threadId/{context.ThreadId}") Target="_blank">@(context.Up?.Username ?? "动态")</MudButton>
                 </ChildContent>
                 <TooltipContent>
                     <DynamicCard ThreadId=@context.ThreadId PaperElevation=0 PaperWidth="500px"></DynamicCard>
