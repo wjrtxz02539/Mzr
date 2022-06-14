@@ -25,9 +25,8 @@
         <col style="width:6rem" />
         <col style="width:3rem" />
         <col style="width:12rem;" />
-        <col style="width:12rem;" />
         <col />
-        <col style="width:2rem" />
+        <col style="width:12rem" />
     </ColGroup>
     <HeaderContent>
         <MudTh>头像</MudTh>
@@ -35,7 +34,6 @@
         <MudTh><MudTableSortLabel SortLabel="like" T="BiliReply">点赞</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="replies_count" T="BiliReply">回复</MudTableSortLabel></MudTh>
         <MudTh><MudTableSortLabel SortLabel="time" T="BiliReply">时间</MudTableSortLabel></MudTh>
-        <MudTh><MudTableSortLabel SortLabel="ip" T="BiliReply">IP</MudTableSortLabel></MudTh>
         <MudTh>评论</MudTh>
         <MudTh>操作</MudTh>
     </HeaderContent>
@@ -55,7 +53,6 @@
                 @context.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")
             </MudText>
         </MudTd>
-        <MudTd DataLabel="IP">@context.IP</MudTd>
         <MudTd DataLabel="评论">@context.Content</MudTd>
         <MudTd DataLabel="操作">
             <MudTooltip Placement=@Placement.Left>

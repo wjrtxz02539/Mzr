@@ -1,0 +1,7 @@
+﻿@using Blazorise.Charts
+
+@if (!string.IsNullOrEmpty(Title))
+{
+    <MudText Typo=@Typo.h6 Align=@Align.Center>@Title</MudText>
+}
+<PieChart @ref="pieChart" TItem="long" />

@@ -17,7 +17,7 @@ namespace BlazorWeb.Data
         private readonly IBiliDynamicRepository dynamicRepo;
         private readonly WebFileService fileService;
         private readonly StatusService statusService;
-        public BiliReplyService(ILogger<BiliReplyService> logger, IBiliReplyRepository replyRepo, IBiliDynamicRepository dynamicRepo, 
+        public BiliReplyService(ILogger<BiliReplyService> logger, IBiliReplyRepository replyRepo, IBiliDynamicRepository dynamicRepo,
             WebFileService fileService, StatusService statusService)
         {
             this.logger = logger;
@@ -165,7 +165,7 @@ namespace BlazorWeb.Data
             var cursor = await replyRepo.Collection.Find(filter).Limit(size).Skip(skip).Sort(sortDefinition).ToCursorAsync(cancellation);
             while (await cursor.MoveNextAsync(cancellation))
             {
-                foreach(var item in cursor.Current)
+                foreach (var item in cursor.Current)
                     yield return item;
             }
         }
@@ -207,6 +207,32 @@ namespace BlazorWeb.Data
                 await fileService.DeleteAsync(file);
                 return null;
             }
+        }
+
+        public async Task<List<Tuple<BiliUser, long>>> ReplyCountGroupByUpAsync(long? userId = null, long? threadId = null, long? upId = null, long? dialogId = null,
+            string? contentQuery = null, DateTime? startTime = null, DateTime? endTime = null, long? root = null, long? parent = null, string? ipQuery = null, CancellationToken cancellationToken = default)
+        {
+            var filter = FilterBuilder(userId: userId, threadId: threadId, upId: upId, dialogId: dialogId,
+                contentQuery: contentQuery, startTime: startTime, endTime: endTime, root: root, parent: parent, ipQuery: ipQuery);
+
+            var filterBson = filter.Render(replyRepo.Collection.DocumentSerializer, replyRepo.Collection.Settings.SerializerRegistry);
+
+            PipelineDefinition<BiliReply, BsonDocument> pipeline = new BsonDocument[]
+            {
+                new BsonDocument("$match", filterBson),
+                BsonDocument.Parse("{$group: {_id: \"$up_id\", count: {$sum: 1}}}"),
+            };
+
+            var result = new List<Tuple<BiliUser, long>>();
+            await replyRepo.Collection.Aggregate(pipeline, cancellationToken: cancellationToken).ForEachAsync(item =>
+            {
+                var up = statusService.MonitoredUp.GetValueOrDefault(item["_id"].AsInt64);
+                if (up == null)
+                    return;
+                result.Add(new(up, item["count"].AsInt32));
+            }, cancellationToken: cancellationToken);
+
+            return result;
         }
     }
 }

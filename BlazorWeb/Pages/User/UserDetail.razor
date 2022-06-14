@@ -1,5 +1,6 @@
 ﻿@page "/user/{userId:long}"
 @layout ContainerLayout
+@inject BiliReplyService replyService
 @attribute [Authorize]
 
 <PageTitle>用户详情</PageTitle>
@@ -20,6 +21,7 @@
                 <ReplyLineChart UserIds=@(new(){UserId}) ControlEnabled="true" 
                                 ThreadIds=@(ThreadId.HasValue ? new(){ThreadId.Value} : new())
                                 UpIds=@(UpId.HasValue ? new(){UpId.Value} : new()) />
+                <ReplyByUpPieChart UserId=@UserId ControlEnabled="true" />
             </MudTabPanel>
         </MudTabs>
     </MudItem>
@@ -36,5 +38,4 @@
     [Parameter]
     [SupplyParameterFromQuery(Name = "upId")]
     public long? UpId { get; set; } = null;
-
 }
