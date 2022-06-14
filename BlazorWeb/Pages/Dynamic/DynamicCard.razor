@@ -29,6 +29,7 @@
         <MudCardActions>
             <MudText Typo=@Typo.subtitle1 Align=@Align.Start>@dynamic?.Time.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss")</MudText>
             <MudSpacer />
+            <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"https://t.bilibili.com/{dynamic?.DynamicId}") Target="_blank">原动态</MudButton>
             @if (runRecord?.Total > 0)
             {
                 <MudButton Variant=@Variant.Text Color=@Color.Primary Href=@($"/dynamic/{dynamic?.DynamicId}") Target="_blank">@(runRecord?.Total)条评论</MudButton>
