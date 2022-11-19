@@ -209,7 +209,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     logger.LogError("{logPrefix} Failed to parse url result: {url}\n{ex}", logPrefix, uriBuilder.Uri.AbsoluteUri, e);
                     yield break;
                 }
-                if (rawBiliThread.Data.Replies.Count > 0)
+                if (rawBiliThread.Data.Replies is not null && rawBiliThread.Data.Replies.Count > 0)
                 {
                     foreach (var reply in rawBiliThread.Data.Replies)
                         yield return reply;
