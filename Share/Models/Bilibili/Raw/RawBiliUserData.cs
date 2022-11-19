@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace Mzr.Share.Models.Bilibili.Raw
@@ -41,15 +36,12 @@ namespace Mzr.Share.Models.Bilibili.Raw
         {
             get
             {
-                switch (Sex)
+                return Sex switch
                 {
-                    case "女":
-                        return 0;
-                    case "男":
-                        return 1;
-                    default:
-                        return 2;
-                }
+                    "女" => 0,
+                    "男" => 1,
+                    _ => 2,
+                };
             }
         }
     }

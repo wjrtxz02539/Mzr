@@ -2,14 +2,8 @@
 using Mzr.Share.Configuration;
 using Mzr.Share.Interfaces;
 using Mzr.Share.Models.ProxyPool;
-using System;
-using System.Buffers.Text;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 using MzrConfiguration = Mzr.Share.Configuration.Configuration;
 
 namespace Mzr.Share.Utils
@@ -37,7 +31,7 @@ namespace Mzr.Share.Utils
 
             refreshTask = new(async () =>
             {
-                while(!cancellationTokenSource.IsCancellationRequested)
+                while (!cancellationTokenSource.IsCancellationRequested)
                 {
                     await Task.Delay(10000);
                     if (await GetProxyCount() < this.configuration.BatchSize)
@@ -49,64 +43,60 @@ namespace Mzr.Share.Utils
 
         public void UpdateWhiteIP()
         {
-            using(var client = new HttpClient())
-            {
-                var response = client.GetFromJsonAsync<GetMyIPResponse>($"{GetMyIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}").Result;
-                if (response == null)
-                    throw new Exception("Failed to get IP.");
+            using var client = new HttpClient();
+            var response = client.GetFromJsonAsync<GetMyIPResponse>($"{GetMyIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}").Result;
+            if (response == null)
+                throw new Exception("Failed to get IP.");
 
-                if (response.Code != 0)
-                    throw new Exception($"Failed to get IP: {response.Message}");
+            if (response.Code != 0)
+                throw new Exception($"Failed to get IP: {response.Message}");
 
-                var setResponse = client.GetFromJsonAsync<SetWhiteIPResponse>($"{SetWhiteIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&iplist={response.Data.IP}").Result;
-                if (setResponse == null)
-                    throw new Exception("Failed to set white list IP.");
-                if (setResponse.Code != 0)
-                    throw new Exception($"Failed to set white list IP: {setResponse.Message}");
-            }
+            var setResponse = client.GetFromJsonAsync<SetWhiteIPResponse>($"{SetWhiteIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&iplist={response.Data.IP}").Result;
+            if (setResponse == null)
+                throw new Exception("Failed to set white list IP.");
+            if (setResponse.Code != 0)
+                throw new Exception($"Failed to set white list IP: {setResponse.Message}");
         }
 
         public async Task GetMoreProxy()
         {
             try
             {
-                using (var client = new HttpClient())
+                using var client = new HttpClient();
+                var response = await client.GetFromJsonAsync<GetDpsResponse>($"{configuration.Url}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&num={configuration.BatchSize}", cancellationToken: cancellationTokenSource.Token);
+                if (response == null)
                 {
-                    var response = await client.GetFromJsonAsync<GetDpsResponse>($"{configuration.Url}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&num={configuration.BatchSize}", cancellationToken: cancellationTokenSource.Token);
-                    if (response == null)
-                    {
-                        logger.LogError("Failed to get more proxy.");
-                        return;
-                    }
+                    logger.LogError("Failed to get more proxy.");
+                    return;
+                }
 
-                    if (response.Code != 0)
-                    {
-                        logger.LogError("[{code}] Get more proxy failed: {message}.", response.Code, response.Message);
-                        return;
-                    }
+                if (response.Code != 0)
+                {
+                    logger.LogError("[{code}] Get more proxy failed: {message}.", response.Code, response.Message);
+                    return;
+                }
 
-                    var addTime = DateTime.UtcNow;
-                    await poolLock.WaitAsync(cancellationTokenSource.Token);
-                    try
+                var addTime = DateTime.UtcNow;
+                await poolLock.WaitAsync(cancellationTokenSource.Token);
+                try
+                {
+                    foreach (var proxy in response.Data.Proxys)
                     {
-                        foreach (var proxy in response.Data.Proxys)
+                        proxyPools.TryAdd(proxy, new Proxy()
                         {
-                            proxyPools.TryAdd(proxy, new Proxy()
-                            {
-                                Key = proxy,
-                                Url = proxy,
-                                AddTime = addTime,
-                                IsHttps = true,
-                                DeleteCount = 0,
-                            });
-                        }
-                        Interlocked.Add(ref totalProxyCount, response.Data.Proxys.Count);
-                        logger.LogDebug("Add {count} proxy.", response.Data.Proxys.Count);
+                            Key = proxy,
+                            Url = proxy,
+                            AddTime = addTime,
+                            IsHttps = true,
+                            DeleteCount = 0,
+                        });
                     }
-                    finally
-                    {
-                        poolLock.Release();
-                    }
+                    Interlocked.Add(ref totalProxyCount, response.Data.Proxys.Count);
+                    logger.LogDebug("Add {count} proxy.", response.Data.Proxys.Count);
+                }
+                finally
+                {
+                    poolLock.Release();
                 }
             }
             catch (Exception ex)
@@ -150,7 +140,7 @@ namespace Mzr.Share.Utils
                 await poolLock.WaitAsync(cancellationTokenSource.Token);
                 try
                 {
-                    if (proxyPools.Count == 0)
+                    if (proxyPools.IsEmpty)
                     {
                         tries++;
                         logger.LogDebug("[{tries}/{tryCount}] Try to get proxy.", tries, tryCount);

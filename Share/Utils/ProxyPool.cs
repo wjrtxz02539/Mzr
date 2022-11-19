@@ -1,29 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Net.Http.Json;
-using Microsoft.Extensions.Logging;
-using Mzr.Share.Models.ProxyPool;
+﻿using Microsoft.Extensions.Logging;
 using Mzr.Share.Configuration;
-using MzrConfiguration = Mzr.Share.Configuration.Configuration;
 using Mzr.Share.Interfaces;
-using System.Collections.Concurrent;
+using Mzr.Share.Models.ProxyPool;
+using System.Net.Http.Json;
+using MzrConfiguration = Mzr.Share.Configuration.Configuration;
 
 namespace Mzr.Share.Utils
 {
     public class ProxyPool : IProxyPool
     {
-        private KDLProxyConfiguration configuration;
-        private HttpClient client;
-        private Uri baseUri;
-        private Uri getUri;
-        private Uri countUri;
-        private Uri deleteUri;
+        private readonly KDLProxyConfiguration configuration;
+        private readonly HttpClient client;
+        private readonly Uri baseUri;
+        private readonly Uri getUri;
+        private readonly Uri countUri;
+        private readonly Uri deleteUri;
         private bool disposedValue;
-        private ILogger<ProxyPool> logger;
-        private Dictionary<string, int> waitToDelete = new();
+        private readonly ILogger<ProxyPool> logger;
+        private readonly Dictionary<string, int> waitToDelete = new();
         private int deleteProxyCount = 0;
         private int totalProxyCount = 0;
 
@@ -92,8 +86,8 @@ namespace Mzr.Share.Utils
                 {
                     logger.LogWarning("Failed to GetProxyCount. {ex}", ex);
                 }
-                finally 
-                { 
+                finally
+                {
                     count++;
                 }
             } while (count < tryCount);

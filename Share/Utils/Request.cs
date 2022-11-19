@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Microsoft.Extensions.Logging;
+using Mzr.Share.Interfaces;
+using Mzr.Share.Models.ProxyPool;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using System.Text.Json;
-using Microsoft.Extensions.Logging;
-using MongoDB.Bson.IO;
-using System.Text.Json.Serialization;
-using Mzr.Share.Interfaces;
-using System.Collections.Concurrent;
-using MongoDB.Driver.Core.Events;
-using Mzr.Share.Models.ProxyPool;
 
 namespace Mzr.Share.Utils
 {
@@ -163,7 +156,7 @@ namespace Mzr.Share.Utils
             return await response.Content.ReadAsStreamAsync();
         }
 
-        public async Task<TValue?> GetFromJsonAsync<TValue>(string url, Dictionary<string, string>? headers = null, int retryCount = 1000, int timeout = 10, Func<Stream, string>? responseFunc = null, bool autoHttps = false) where TValue: class
+        public async Task<TValue?> GetFromJsonAsync<TValue>(string url, Dictionary<string, string>? headers = null, int retryCount = 1000, int timeout = 10, Func<Stream, string>? responseFunc = null, bool autoHttps = false) where TValue : class
         {
             var count = 0;
             var logLevel = LogLevel.Debug;
@@ -191,7 +184,7 @@ namespace Mzr.Share.Utils
                     await Task.Delay(1000);
                 }
                 finally { count++; }
-            } while(count < retryCount);
+            } while (count < retryCount);
 
             logger.LogCritical("Failed to GetFromJsonAsync {url} within {retryCount} tries.", url, retryCount);
             return null;

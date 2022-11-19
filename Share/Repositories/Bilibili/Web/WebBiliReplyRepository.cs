@@ -6,17 +6,8 @@ using Mzr.Share.Interfaces.Bilibili;
 using Mzr.Share.Models.Bilibili;
 using Mzr.Share.Models.Bilibili.Raw;
 using Mzr.Share.Utils;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.SymbolStore;
-using System.Linq;
-using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
-using System.Security.Authentication.ExtendedProtection;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Web;
 
 
@@ -79,7 +70,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             }
 
             var dynamic = await dynamicRepo.Collection.Find(f => f.DynamicId == biliDynamic.DynamicId).FirstOrDefaultAsync();
-            if(dynamic == null)
+            if (dynamic == null)
             {
                 logger.LogError("{logPrefix} Dynamic not found in database: {dynamicId}.", logPrefix, biliDynamic.DynamicId);
                 yield break;
@@ -174,7 +165,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             else
                 nextPos = runRecord.Progress;
 
-            while(!cursor.IsEnd)
+            while (!cursor.IsEnd)
             {
                 logger.LogDebug("{logPrefix} Querying next {next}.", logPrefix, nextPos);
                 runRecord.Progress = nextPos;
@@ -281,8 +272,8 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             if (dbUser == null)
             {
                 dbUser = await webUserRepo.FromIdAsync(document.User.UserId);
-                if(dbUser == null)
-                { 
+                if (dbUser == null)
+                {
                     dbUser = new BiliUser()
                     {
                         UserId = document.User.UserId,
@@ -328,7 +319,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 
                 if (!dbUser.Usernames.Contains(document.User.Username))
                     dbUser.Usernames.Add(document.User.Username);
-                if(!dbUser.Signs.Contains(document.User.Sign))
+                if (!dbUser.Signs.Contains(document.User.Sign))
                     dbUser.Signs.Add(document.User.Sign);
                 if (!string.IsNullOrEmpty(document.IP) && !dbUser.IPList.Contains(document.IP))
                     dbUser.IPList.Add(document.IP);
@@ -351,7 +342,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 }
                 else if (raw.Replies is not null)
                 {
-                    foreach(var reply in raw.Replies)
+                    foreach (var reply in raw.Replies)
                     {
                         await FromRawAsync(reply, up, dynamic, requestTimeout: requestTimeout);
                     }
@@ -403,7 +394,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 
             if (rawBiliThread.Data.Replies is not null && rawBiliThread.Data.Replies.Count > 0)
             {
-                foreach(var reply in rawBiliThread.Data.Replies)
+                foreach (var reply in rawBiliThread.Data.Replies)
                     await FromRawAsync(reply, up, dynamic, requestTimeout: requestTimeout);
             }
 
@@ -430,7 +421,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                         user.Sailings.Add(item);
                 }
 
-            if(replyUser.Pendants != null)
+            if (replyUser.Pendants != null)
                 foreach (var item in replyUser.Pendants)
                 {
                     if (!user.Pendants.Contains(item))

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Text.Json.Serialization;
 
 namespace Mzr.Share.Models.Bilibili.Raw
 {
@@ -156,7 +150,7 @@ namespace Mzr.Share.Models.Bilibili.Raw
     public class RawBiliReplyMemberUserSailingCardBG
     {
         [JsonPropertyName("name")]
-        public string Name { get; set; } = null!;    
+        public string Name { get; set; } = null!;
 
         [JsonPropertyName("fan")]
         public RawBiliReplyMemberUserSailingCardBGFan? Fan { get; set; }

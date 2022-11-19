@@ -3,11 +3,6 @@ using MongoDB.Driver;
 using MongoDB.Driver.GridFS;
 using Mzr.Share.Interfaces;
 using Mzr.Share.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Mzr.Share.Repositories
 {

@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Linq.Expressions;
-using Mzr.Share.Interfaces.Bilibili;
-using MongoDB.Driver;
-using Mzr.Share.Models.Bilibili;
+﻿using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Mzr.Share.Configuration;
+using MongoDB.Driver;
+using Mzr.Share.Interfaces.Bilibili;
+using Mzr.Share.Models.Bilibili;
 
 namespace Mzr.Share.Repositories.Bilibili
 {
@@ -23,7 +14,7 @@ namespace Mzr.Share.Repositories.Bilibili
         private readonly List<CreateIndexModel<T>> _indexModels;
         private static IMongoDatabase? Database;
         private IMongoCollection<T>? _collection = null;
-        
+
         public IMongoCollection<T> Collection
         {
             get
@@ -57,8 +48,7 @@ namespace Mzr.Share.Repositories.Bilibili
             Logger = logger;
             Database = mongoDatabase;
 
-            if (createIndexModels == null)
-                createIndexModels = new List<CreateIndexModel<T>>();
+            createIndexModels ??= new List<CreateIndexModel<T>>();
             _indexModels = createIndexModels;
         }
 
@@ -74,7 +64,7 @@ namespace Mzr.Share.Repositories.Bilibili
         public async Task DeleteAsync(ObjectId id) =>
             await Collection.DeleteOneAsync(f => f.Id == id);
 
-        public async Task DeleteAsync(string id) => 
+        public async Task DeleteAsync(string id) =>
             await Collection.DeleteOneAsync(f => f.Id == ObjectId.Parse(id));
 
         public async Task<T> GetAsync(ObjectId id) =>

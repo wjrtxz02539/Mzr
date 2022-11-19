@@ -1,20 +1,12 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Mzr.Share.Models.Bilibili;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Mzr.Share.Utils;
-using Mzr.Share.Models.Bilibili.Raw;
-using Mzr.Share.Repositories.Bilibili.Raw;
-using System.Security.Cryptography.X509Certificates;
+using Microsoft.Extensions.Logging;
 using MongoDB.Driver;
-using Mzr.Share.Interfaces.Bilibili.Raw;
 using Mzr.Share.Interfaces.Bilibili;
+using Mzr.Share.Interfaces.Bilibili.Raw;
+using Mzr.Share.Models.Bilibili;
+using Mzr.Share.Models.Bilibili.Raw;
+using Mzr.Share.Utils;
 
 namespace Mzr.Share.Repositories.Bilibili.Web
 {
@@ -24,10 +16,8 @@ namespace Mzr.Share.Repositories.Bilibili.Web
         private readonly Request request;
         private readonly IRawBiliUserRepository rawBiliUserRepository;
         private readonly IBiliUserRepository biliUserRepository;
-        private readonly ILogger logger;
         public WebBiliUserRepository(IHost host)
         {
-            logger = host.Services.GetRequiredService<ILogger<WebBiliUserRepository>>();
             request = host.Services.GetRequiredService<Request>();
             rawBiliUserRepository = host.Services.GetRequiredService<IRawBiliUserRepository>();
             biliUserRepository = host.Services.GetRequiredService<IBiliUserRepository>();

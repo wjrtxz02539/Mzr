@@ -3,13 +3,7 @@ using Microsoft.Extensions.Logging;
 using Mzr.Share.Configuration;
 using Mzr.Share.Interfaces;
 using Mzr.Share.Models.ProxyPool;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
 using MzrConfiguration = Mzr.Share.Configuration.Configuration;
 
 namespace Mzr.Share.Utils
@@ -80,7 +74,7 @@ namespace Mzr.Share.Utils
             try
             {
                 var response = await client.GetAsync(getUrl);
-                if(response == null || !response.IsSuccessStatusCode)
+                if (response == null || !response.IsSuccessStatusCode)
                 {
                     logger.LogError("Failed to get proxy.");
                     return null;
@@ -127,7 +121,7 @@ namespace Mzr.Share.Utils
 
                 return (int)status.TotalCount;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.LogError("Failed to get proxy status: {ex}", ex);
                 return 0;

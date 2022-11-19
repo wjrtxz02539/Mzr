@@ -1,22 +1,15 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
-using Mzr.Share.Models.Bilibili.Raw;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Mzr.Share.Interfaces.Bilibili.Raw;
 using Mzr.Share.Models.Bilibili;
-using Mzr.Share.Utils;
-using Microsoft.Extensions.DependencyInjection;
+using Mzr.Share.Models.Bilibili.Raw;
+using System.Text.Json.Nodes;
 
 namespace Mzr.Share.Repositories.Bilibili.Raw
 {
     public class RawBiliDynamicRepository : RawBiliRepository<RawBiliDynamic>, IRawBiliDynamicRepository
     {
-        
+
         public RawBiliDynamicRepository(ILogger<RawBiliDynamicRepository> logger, IHost host) : base(logger, host)
         {
         }

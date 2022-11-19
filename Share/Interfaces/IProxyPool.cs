@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Mzr.Share.Models.ProxyPool;
+﻿using Mzr.Share.Models.ProxyPool;
 
 namespace Mzr.Share.Interfaces
 {

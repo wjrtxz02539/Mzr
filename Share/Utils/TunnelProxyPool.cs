@@ -2,12 +2,7 @@
 using Mzr.Share.Configuration;
 using Mzr.Share.Interfaces;
 using Mzr.Share.Models.ProxyPool;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 using MzrConfiguration = Mzr.Share.Configuration.Configuration;
 
 
@@ -18,14 +13,12 @@ namespace Mzr.Share.Utils
         private const string GetMyIPUrl = "https://dev.kdlapi.com/api/getmyip";
         private const string SetWhiteIPUrl = "https://dev.kdlapi.com/api/setipwhitelist";
 
-        private readonly ILogger logger;
         private readonly KDLProxyConfiguration configuration;
         private readonly Proxy proxy;
 
-        public TunnelProxyPool(MzrConfiguration configuration, ILogger<ProxyPool> logger)
+        public TunnelProxyPool(MzrConfiguration configuration)
         {
             this.configuration = configuration.KDLProxy;
-            this.logger = logger;
             proxy = new()
             {
                 Url = this.configuration.Url,
@@ -39,21 +32,19 @@ namespace Mzr.Share.Utils
 
         public void UpdateWhiteIP()
         {
-            using (var client = new HttpClient())
-            {
-                var response = client.GetFromJsonAsync<GetMyIPResponse>($"{GetMyIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}").Result;
-                if (response == null)
-                    throw new Exception("Failed to get IP.");
+            using var client = new HttpClient();
+            var response = client.GetFromJsonAsync<GetMyIPResponse>($"{GetMyIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}").Result;
+            if (response == null)
+                throw new Exception("Failed to get IP.");
 
-                if (response.Code != 0)
-                    throw new Exception($"Failed to get IP: {response.Message}");
+            if (response.Code != 0)
+                throw new Exception($"Failed to get IP: {response.Message}");
 
-                var setResponse = client.GetFromJsonAsync<SetWhiteIPResponse>($"{SetWhiteIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&iplist={response.Data.IP}").Result;
-                if (setResponse == null)
-                    throw new Exception("Failed to set white list IP.");
-                if (setResponse.Code != 0)
-                    throw new Exception($"Failed to set white list IP: {setResponse.Message}");
-            }
+            var setResponse = client.GetFromJsonAsync<SetWhiteIPResponse>($"{SetWhiteIPUrl}?&orderid={configuration.OrderId}&signature={configuration.ApiKey}&iplist={response.Data.IP}").Result;
+            if (setResponse == null)
+                throw new Exception("Failed to set white list IP.");
+            if (setResponse.Code != 0)
+                throw new Exception($"Failed to set white list IP: {setResponse.Message}");
         }
         public async Task DeleteProxy(Proxy proxy)
         {

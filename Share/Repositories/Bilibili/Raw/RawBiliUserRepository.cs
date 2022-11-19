@@ -1,14 +1,9 @@
-﻿using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using Mzr.Share.Interfaces.Bilibili.Raw;
 using Mzr.Share.Models.Bilibili;
 using Mzr.Share.Models.Bilibili.Raw;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MongoDB.Bson;
 
 namespace Mzr.Share.Repositories.Bilibili.Raw
 {
@@ -39,7 +34,7 @@ namespace Mzr.Share.Repositories.Bilibili.Raw
                 }
                 return user;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logger.LogError("{ex}:\n{raw}", ex, raw.ToJson());
             }

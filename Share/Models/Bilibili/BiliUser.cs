@@ -52,15 +52,12 @@ namespace Mzr.Share.Models.Bilibili
         {
             get
             {
-                switch (Sex)
+                return Sex switch
                 {
-                    case 0:
-                        return "女";
-                    case 1:
-                        return "男";
-                    default:
-                        return "未知";
-                }
+                    0 => "女",
+                    1 => "男",
+                    _ => "未知",
+                };
             }
         }
 
@@ -69,15 +66,12 @@ namespace Mzr.Share.Models.Bilibili
         {
             get
             {
-                switch (Vip)
+                return Vip switch
                 {
-                    case 1:
-                        return "大会员";
-                    case 2:
-                        return "年度大会员";
-                    default:
-                        return "";
-                }
+                    1 => "大会员",
+                    2 => "年度大会员",
+                    _ => "",
+                };
             }
         }
     }
