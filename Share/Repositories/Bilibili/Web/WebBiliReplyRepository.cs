@@ -186,7 +186,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     do
                     {
                         rawBiliThread = await request.GetFromJsonAsync<RawBiliThread>(uriBuilder.Uri.AbsoluteUri, headers: headers, responseFunc: ExtractJQJson, autoHttps: true, timeout: requestTimeout);
-                        logger.LogDebug("{logPrefix} Queryed next {next} with {replyCount} replies.", logPrefix, nextPos, rawBiliThread?.Data.Replies.Count);
+                        logger.LogDebug("{logPrefix} Queryed next {next} with {replyCount} replies.", logPrefix, nextPos, rawBiliThread?.Data.Replies?.Count ?? 0);
                         if (rawBiliThread is null || rawBiliThreadCount >= retryCount)
                         {
                             logger.LogError("{logPrefix} Failed to get url: {url}.", logPrefix, uriBuilder.Uri.AbsoluteUri);
@@ -242,13 +242,13 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 Content = raw.Content.Message,
                 Device = raw.Content.Device,
                 Plat = raw.Content.Plat,
-                HasFolded = raw.Folder.HasFolded,
-                IsFolded = raw.Folder.IsFolded,
+                HasFolded = raw.Folder?.HasFolded,
+                IsFolded = raw.Folder?.IsFolded,
                 Invisible = raw.Invisible,
                 RepliesCount = raw.ReplyCount,
                 IP = raw.Content.IPv6
             };
-
+            
             document.User = new BiliReplyUser()
             {
                 UserId = raw.Member.UserId,
@@ -344,7 +344,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 
             if (raw.ReplyCount > 0)
             {
-                if (raw.Replies.Count < document.RepliesCount)
+                if ((raw.Replies?.Count ?? 0) < document.RepliesCount)
                 {
                     foreach (var page in Enumerable.Range(1, (int)Math.Ceiling((double)(raw.ReplyCount / 20)) + 1))
                         await FromReplyIdAsync(document.ReplyId, up, dynamic, page, requestTimeout: requestTimeout);
