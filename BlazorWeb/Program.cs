@@ -49,7 +49,12 @@ builder.Logging.AddSimpleConsole(options =>
 builder.Services.AddSingleton<WebConfiguration>((provider) =>
 {
     var configRoot = provider.GetRequiredService<IConfiguration>();
-    return configRoot.GetRequiredSection("WebConfiguration").Get<WebConfiguration>();
+    var webConfig = configRoot.GetRequiredSection("WebConfiguration").Get<WebConfiguration>();
+    if (webConfig is null)
+    {
+        throw new NullReferenceException(nameof(webConfig));
+    }
+    return webConfig;
 });
 
 builder.Services.AddSingleton<IMongoDatabase>((provider) =>

@@ -13,7 +13,13 @@ namespace Mzr.Service.Crawler.Utils
         public CrawlerServiceConfiguration Crawler { get; set; }
         public CrawlerConfiguration(IConfiguration configuration)
         {
-            Crawler = configuration.GetRequiredSection("Crawler").Get<CrawlerServiceConfiguration>();
+            var crawler = configuration.GetRequiredSection("Crawler").Get<CrawlerServiceConfiguration>();
+            if (crawler is null)
+            {
+                throw new NullReferenceException(nameof(crawler));
+            }
+
+            Crawler = crawler;
             Crawler.Validate();
 
         }

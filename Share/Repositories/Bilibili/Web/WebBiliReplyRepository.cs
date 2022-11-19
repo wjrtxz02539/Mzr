@@ -24,9 +24,9 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 {
     public class WebBiliReplyRepository
     {
-        private static readonly Uri threadUri = new Uri(@"http://api.bilibili.com/x/v2/reply/main");
-        private static readonly Uri replyUri = new Uri(@"http://api.bilibili.com/x/v2/reply/reply");
-        private static readonly Dictionary<int, int> threadMap = new Dictionary<int, int>()
+        private static readonly Uri threadUri = new(@"http://api.bilibili.com/x/v2/reply/main");
+        private static readonly Uri replyUri = new(@"http://api.bilibili.com/x/v2/reply/reply");
+        private static readonly Dictionary<int, int> threadMap = new()
         {
             {1, 17 },
             {2, 11 },
@@ -36,8 +36,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             {256, 14 },
             {2048,17 }
         };
-        private static Dictionary<string, string> headers = new() { { "referer", "https://t.bilibili.com/" } };
-        private static Regex pattern = new(@"jQuery\d*_\d*\((.*)\)", RegexOptions.Compiled);
+        private static readonly Dictionary<string, string> headers = new() { { "referer", "https://t.bilibili.com/" } };
         private const string baseQuery = @"callback=jQuery3310583964485019705_1646660568676&jsonp=jsonp&mode=2&plat=1";
         private const string replyBaseQuery = @"callback=jQuery3310583964485019705_1646660568676&jsonp=jsonp&ps=20";
 
@@ -100,8 +99,10 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             query["oid"] = dynamic.ThreadId.ToString();
             query["next"] = nextPos.ToString();
 
-            var uriBuilder = new UriBuilder(threadUri);
-            uriBuilder.Query = query.ToString();
+            var uriBuilder = new UriBuilder(threadUri)
+            {
+                Query = query.ToString()
+            };
             RawBiliThreadDataCursor cursor;
             try
             {
@@ -227,7 +228,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
 
         public async Task<BiliReply> FromRawAsync(RawBiliReply raw, BiliUser up, BiliDynamic dynamic, int requestTimeout = 10)
         {
-            var document = new BiliReply()
+            var document = new BiliReply
             {
                 ReplyId = raw.ReplyId,
                 Floor = raw.Floor,
@@ -246,21 +247,20 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 IsFolded = raw.Folder?.IsFolded,
                 Invisible = raw.Invisible,
                 RepliesCount = raw.ReplyCount,
-                IP = raw.Content.IPv6
+                IP = raw.Content.IPv6,
+                User = new BiliReplyUser()
+                {
+                    UserId = raw.Member.UserId,
+                    Username = raw.Member.Username,
+                    Avatar = raw.Member.Avatar,
+                    Sex = raw.Member.ParsedSex,
+                    Sign = raw.Member.Sign,
+                    Level = raw.Member.LevelInfo.Level,
+                    Vip = raw.Member.VIP.Type,
+                    Sailings = new List<BiliUserSailing>(),
+                    Pendants = new List<string>()
+                }
             };
-            
-            document.User = new BiliReplyUser()
-            {
-                UserId = raw.Member.UserId,
-                Username = raw.Member.Username,
-                Avatar = raw.Member.Avatar,
-                Sex = raw.Member.ParsedSex,
-                Sign = raw.Member.Sign,
-                Level = raw.Member.LevelInfo.Level,
-                Vip = raw.Member.VIP.Type,
-                Sailings = new List<BiliUserSailing>(),
-                Pendants = new List<string> ()
-            }; 
 
             if (raw.Member.UserSailing is RawBiliReplyMemberUserSailing sailing
                 && sailing.CardBG is RawBiliReplyMemberUserSailingCardBG cardBG)
@@ -349,7 +349,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                     foreach (var page in Enumerable.Range(1, (int)Math.Ceiling((double)(raw.ReplyCount / 20)) + 1))
                         await FromReplyIdAsync(document.ReplyId, up, dynamic, page, requestTimeout: requestTimeout);
                 }
-                else
+                else if (raw.Replies is not null)
                 {
                     foreach(var reply in raw.Replies)
                     {
@@ -384,8 +384,10 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             query["type"] = threadMap[dynamic.DynamicType].ToString();
             query["oid"] = dynamic.ThreadId.ToString();
 
-            var uriBuilder = new UriBuilder(replyUri);
-            uriBuilder.Query = query.ToString();
+            var uriBuilder = new UriBuilder(replyUri)
+            {
+                Query = query.ToString()
+            };
 
             RawBiliThread? rawBiliThread;
             var rawBiliThreadCount = 0;
@@ -399,7 +401,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
                 }
             } while (rawBiliThread.Code != 0);
 
-            if (rawBiliThread.Data.Replies != null && rawBiliThread.Data.Replies.Count > 0)
+            if (rawBiliThread.Data.Replies is not null && rawBiliThread.Data.Replies.Count > 0)
             {
                 foreach(var reply in rawBiliThread.Data.Replies)
                     await FromRawAsync(reply, up, dynamic, requestTimeout: requestTimeout);
@@ -418,7 +420,7 @@ namespace Mzr.Share.Repositories.Bilibili.Web
             return Encoding.UTF8.GetString(buf[40..^1]);
         }
 
-        private BiliUser MergeUserSailingAndPendent(BiliUser user, BiliReplyUser replyUser)
+        private static BiliUser MergeUserSailingAndPendent(BiliUser user, BiliReplyUser replyUser)
         {
             var dbSailingNames = user.Sailings.Select(s => s.Name).ToList();
             if (replyUser.Sailings != null)

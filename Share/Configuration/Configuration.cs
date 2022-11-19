@@ -15,9 +15,19 @@ namespace Mzr.Share.Configuration
 
         public Configuration(IConfiguration configuration)
         {
-            Database = configuration.GetRequiredSection("Database").Get<DatabaseConfiguration>();
+            var database = configuration.GetRequiredSection("Database").Get<DatabaseConfiguration>();
+            if (database is null)
+            {
+                throw new NullReferenceException(nameof(database));
+            }
+            Database = database;
 
-            SelfProxy = configuration.GetRequiredSection("SelfProxy").Get<SelfProxyConfiguration>();
+            var selfProxy = configuration.GetRequiredSection("SelfProxy").Get<SelfProxyConfiguration>();
+            if (selfProxy is null)
+            {
+                throw new NullReferenceException(nameof(selfProxy));
+            }
+            SelfProxy = selfProxy;
 
             Validate();
         }

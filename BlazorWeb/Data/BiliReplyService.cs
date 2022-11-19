@@ -12,17 +12,13 @@ namespace BlazorWeb.Data
 {
     public class BiliReplyService
     {
-        private readonly ILogger<BiliReplyService> logger;
         private readonly IBiliReplyRepository replyRepo;
-        private readonly IBiliDynamicRepository dynamicRepo;
         private readonly WebFileService fileService;
         private readonly StatusService statusService;
-        public BiliReplyService(ILogger<BiliReplyService> logger, IBiliReplyRepository replyRepo, IBiliDynamicRepository dynamicRepo,
+        public BiliReplyService(IBiliReplyRepository replyRepo,
             WebFileService fileService, StatusService statusService)
         {
-            this.logger = logger;
             this.replyRepo = replyRepo;
-            this.dynamicRepo = dynamicRepo;
             this.fileService = fileService;
             this.statusService = statusService;
         }

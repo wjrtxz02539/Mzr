@@ -13,7 +13,7 @@ namespace Mzr.Share.Models.Bilibili.Raw
         public RawBiliThreadDataCursor Cursor { get; set; } = null!;
 
         [JsonPropertyName("replies")]
-        public List<RawBiliReply> Replies { get; set; } = new List<RawBiliReply>();
+        public List<RawBiliReply>? Replies { get; set; } = new List<RawBiliReply>();
     }
 
     public class RawBiliThreadDataCursor
