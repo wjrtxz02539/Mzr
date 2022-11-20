@@ -7,10 +7,8 @@ name: Publish BlazorWeb image
 
 on:
   push:
-    branches: ['master']
-    paths: 
-      - 'Share/**'
-      - 'BlazorWeb/**'
+    tags:
+      - v1.*.*
 
 env:
   REGISTRY: ghcr.io

@@ -7,10 +7,8 @@ name: Publish Crawler image
 
 on:
   push:
-    branches: ['master']
-    paths: 
-      - 'Share/**'
-      - 'Crawler/**'
+    tags:
+      - v1.*.*
 
 env:
   REGISTRY: ghcr.io
