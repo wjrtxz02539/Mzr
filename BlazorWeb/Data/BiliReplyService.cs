@@ -37,7 +37,7 @@ namespace BlazorWeb.Data
             if (dialogId.HasValue)
                 filter &= filterBuilder.Eq(f => f.Dialog, dialogId);
             if (!string.IsNullOrEmpty(contentQuery))
-                filter &= filterBuilder.Regex(f => f.Content, new BsonRegularExpression($"/.*{contentQuery}.*/i "));
+                filter &= filterBuilder.Regex(f => f.Content, new BsonRegularExpression(contentQuery));
             if (root.HasValue)
                 filter &= filterBuilder.Eq(f => f.Root, root);
             if (parent.HasValue)
