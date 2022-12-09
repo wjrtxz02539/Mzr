@@ -37,7 +37,7 @@ namespace BlazorWeb.Data
                 filter &= filterBuilder.Eq(f => f.UserId, userId);
 
             if (!string.IsNullOrEmpty(descriptionQuery))
-                filter &= filterBuilder.Regex(f => f.Description, new BsonRegularExpression($"/.*{descriptionQuery}.*/i "));
+                filter &= filterBuilder.Regex(f => f.Description, new BsonRegularExpression(descriptionQuery));
 
             if (startTime.HasValue)
                 filter &= filterBuilder.Gte(f => f.Time, startTime.Value);

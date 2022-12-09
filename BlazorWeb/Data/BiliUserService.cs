@@ -40,10 +40,10 @@ namespace BlazorWeb.Data
             FilterDefinition<BiliUser> filter = new BsonDocument();
 
             if (!string.IsNullOrEmpty(usernameQuery))
-                filter &= filterBuilder.Regex(f => f.Username, new BsonRegularExpression($"/.*{usernameQuery}.*/i "));
+                filter &= filterBuilder.Regex(f => f.Username, new BsonRegularExpression(usernameQuery));
 
             if (!string.IsNullOrEmpty(signQuery))
-                filter &= filterBuilder.Regex(f => f.Sign, new BsonRegularExpression($"/.*{signQuery}.*/i "));
+                filter &= filterBuilder.Regex(f => f.Sign, new BsonRegularExpression(signQuery));
 
             var result = await userRepo.Collection.Find(filter).Skip((page - 1) * size).Limit(size).Sort(sortDefinition).ToListAsync();
             var totalCount = (int)await userRepo.Collection.CountDocumentsAsync(filter);
