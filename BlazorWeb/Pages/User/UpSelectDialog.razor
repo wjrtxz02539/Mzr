@@ -30,6 +30,7 @@
     public EventCallback<List<BiliUser>> UpsSelected { get; set; }
 
     private List<BiliUser> items = new();
+
     private HashSet<BiliUser> selected = new();
 
     protected override async Task OnInitializedAsync()
@@ -52,5 +53,4 @@
     {
         MudDialog.Cancel();
     }
-
 }

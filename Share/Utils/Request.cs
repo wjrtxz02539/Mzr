@@ -104,7 +104,7 @@ namespace Mzr.Share.Utils
                     if (success == true)
                     {
                         if (count > 1)
-                            FailedRequests.TryRemove(urlKey, out RequestStatus _);
+                            FailedRequests.TryRemove(urlKey, out RequestStatus? _);
                     }
                     else
                     {
